@@ -85,6 +85,14 @@ def train_model(cfg,
 
     # 1. Construct model
     model = build_model(cfg.MODEL)
+    model.train()
+    x = paddle.rand([2, 3, 8, 224, 224])
+    with paddle.no_grad():
+        y = model([x, paddle.randint(0, 400, [2, 1]),
+                   paddle.rand([2, 400])],
+                  mode='train')
+
+    exit(0)
     if parallel:
         model = paddle.DataParallel(model)
 

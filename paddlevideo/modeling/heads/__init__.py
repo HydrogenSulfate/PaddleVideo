@@ -20,6 +20,7 @@ from .pptsn_head import ppTSNHead
 from .slowfast_head import SlowFastHead
 from .attention_lstm_head import AttentionLstmHead
 from .timesformer_head import TimeSformerHead
+from .pptimesformer_head import ppTimeSformerHead
 from .stgcn_head import STGCNHead
 
 __all__ = [

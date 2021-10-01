@@ -47,15 +47,15 @@ class BaseHead(nn.Layer):
         in_channels,
         loss_cfg=dict(
             name="CrossEntropyLoss"
-        ),  #TODO(shipping): only pass a name or standard build cfg format.
-        #multi_class=False, NOTE(shipping): not supported now.
+        ),  # TODO(shipping): only pass a name or standard build cfg format.
+        # multi_class=False, NOTE(shipping): not supported now.
         ls_eps=0.):
 
         super().__init__()
         self.num_classes = num_classes
         self.in_channels = in_channels
         self.loss_func = build_loss(loss_cfg)
-        #self.multi_class = multi_class NOTE(shipping): not supported now
+        # self.multi_class = multi_class NOTE(shipping): not supported now
         self.ls_eps = ls_eps
 
     @abstractmethod
@@ -76,7 +76,7 @@ class BaseHead(nn.Layer):
             losses (dict): A dict containing field 'loss'(mandatory) and 'top1_acc', 'top5_acc'(optional).
 
         """
-        if len(labels) == 1:  #commonly case
+        if len(labels) == 1:  # commonly case
             labels = labels[0]
             losses = dict()
             if self.ls_eps != 0. and not valid_mode:  # label_smooth
@@ -89,6 +89,50 @@ class BaseHead(nn.Layer):
             losses['top5'] = top5
             losses['loss'] = loss
             return losses
+        elif len(labels) == 2:  # distill
+            labels, labels_dist = labels
+            losses = dict()
+            if isinstance(scores, tuple):  # DeiT case
+                scores, scores_dist = scores
+
+                if self.ls_eps != 0:
+                    loss_stu = self.label_smooth_loss(scores, labels, **kwargs)
+                else:
+                    loss_stu = self.loss_func(scores, labels, **kwargs)
+
+                loss_dist = self.loss_func(scores_dist,
+                                           labels_dist,
+                                           soft_label=True,
+                                           **kwargs)
+
+                alpha = 0.5
+                loss = (1 - alpha) * loss_stu + alpha * loss_dist
+
+                top1, top5 = self.get_acc(scores, labels, valid_mode)
+                losses['top1'] = top1
+                losses['top5'] = top5
+                losses['loss'] = loss
+                return losses
+            else:  # common distill case
+                if self.ls_eps != 0:
+                    loss_stu = self.label_smooth_loss(scores, labels, **kwargs)
+                else:
+                    loss_stu = self.loss_func(scores, labels, **kwargs)
+
+                loss_dist = self.loss_func(scores,
+                                           labels_dist,
+                                           soft_label=True,
+                                           **kwargs)
+
+                alpha = 0.5
+                loss = (1 - alpha) * loss_stu + alpha * loss_dist
+
+                top1, top5 = self.get_acc(scores, labels, valid_mode)
+                losses['top1'] = top1
+                losses['top5'] = top5
+                losses['loss'] = loss
+                return losses
+
         elif len(labels) == 3:  # mix_up
             labels_a, labels_b, lam = labels
             lam = lam[0]  # get lam value
@@ -123,8 +167,8 @@ class BaseHead(nn.Layer):
         top1 = paddle.metric.accuracy(input=scores, label=labels, k=1)
         top5 = paddle.metric.accuracy(input=scores, label=labels, k=5)
         _, world_size = get_dist_info()
-        #NOTE(shipping): deal with multi cards validate
-        if world_size > 1 and valid_mode:  #reduce sum when valid
+        # NOTE(shipping): deal with multi cards validate
+        if world_size > 1 and valid_mode:  # reduce sum when valid
             top1 = paddle.distributed.all_reduce(
                 top1, op=paddle.distributed.ReduceOp.SUM) / world_size
             top5 = paddle.distributed.all_reduce(

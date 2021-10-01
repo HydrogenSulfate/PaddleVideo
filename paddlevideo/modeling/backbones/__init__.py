@@ -19,6 +19,7 @@ from .resnet_tweaks_tsm import ResNetTweaksTSM
 from .resnet_tweaks_tsn import ResNetTweaksTSN
 from .bmn import BMN
 from .vit import VisionTransformer
+from .deit import DistilledVisionTransformer
 from .stgcn import STGCN
 from .agcn import AGCN
 
