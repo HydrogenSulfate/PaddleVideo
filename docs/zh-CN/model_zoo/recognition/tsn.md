@@ -16,6 +16,8 @@
 
 Temporal Segment Network (TSN) 是视频分类领域经典的基于2D-CNN的解决方案。该方法主要解决视频的长时间行为识别问题，通过稀疏采样视频帧的方式代替稠密采样，既能捕获视频的全局信息，也能去除冗余，降低计算量。核心思想是将每帧的特征做平均融合作为视频的整体特征，再输入分类器进行分类。本代码实现的模型为**基于单路RGB图像**的TSN网络，Backbone采用ResNet-50结构。
 
+AI Studio项目使用链接：[Paddle 2.1实现视频理解经典模型-TSN](https://aistudio.baidu.com/aistudio/projectdetail/2250682?contributionType=1)
+
 <div align="center">
 <img src="../../../images/tsn_architecture.png" height=350 width=80000 hspace='10'/> <br />
 </div>
@@ -94,14 +96,14 @@ python3.7 tools/predict.py --input_file data/example.avi \
                            --use_gpu=True \
                            --use_tensorrt=False
 ```
-- **注意**：对于在计算时会合并N和T的模型（比如TSN、TSM），当`use_tensorrt=True`时，需要指定`batch_size`参数为batch_size*num_seg。
+- **注意**：对于在计算时会合并N和T的模型（比如TSN、TSM），当`use_tensorrt=True`时，需要指定`batch_size`参数为batch_size\*num_seg\*num_crop。
 
     ```bash
     python3.7 tools/predict.py --input_file data/example.avi \
                                --config configs/recognition/tsn/tsn_k400_frames.yaml \
                                --model_file inference/TSN/TSN.pdmodel \
                                --params_file inference/TSN/TSN.pdiparams \
-                               --batch_size 3 \
+                               --batch_size 250 \
                                --use_gpu=True \
                                --use_tensorrt=True
     ```

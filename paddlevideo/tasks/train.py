@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import os.path as osp
+import time
 
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
+from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
+                               load, log_batch, log_epoch, mkdir, save)
+
 from ..loader.builder import build_dataloader, build_dataset
 from ..modeling.builder import build_model
 from ..solver import build_lr, build_optimizer
 from ..utils import do_preciseBN
-from paddlevideo.utils import get_logger
-from paddlevideo.utils import (build_record, log_batch, log_epoch, save, load,
-                               mkdir)
 
 
 def train_model(cfg,
@@ -32,15 +32,19 @@ def train_model(cfg,
                 parallel=True,
                 validate=True,
                 amp=False,
-                use_fleet=False):
+                max_iters=None,
+                use_fleet=False,
+                profiler_options=None):
     """Train model entry
 
     Args:
-    	cfg (dict): configuration.
+        cfg (dict): configuration.
         weights (str): weights path for finetuning.
-    	parallel (bool): Whether multi-cards training. Default: True.
+        parallel (bool): Whether multi-cards training. Default: True.
         validate (bool): Whether to do evaluation. Default: False.
-
+        amp (bool): Whether to use automatic mixed precision during training. Default: False.
+        use_fleet (bool):
+        profiler_options (str): Activate the profiler function Default: None.
     """
     if use_fleet:
         fleet.init(is_collective=True)
@@ -58,7 +62,7 @@ def train_model(cfg,
         assert isinstance(
             global_batch_size, int
         ), f"global_batch_size must be int, but got {type(global_batch_size)}"
-        assert batch_size < global_batch_size, f"global_batch_size must bigger than batch_size"
+        assert batch_size <= global_batch_size, f"global_batch_size must not be less than batch_size"
 
         cur_global_batch_size = batch_size * num_gpus  # The number of batches calculated by all GPUs at one time
         assert global_batch_size % cur_global_batch_size == 0, \
@@ -163,11 +167,18 @@ def train_model(cfg,
         record_list = build_record(cfg.MODEL)
         tic = time.time()
         for i, data in enumerate(train_loader):
+            """Next two line of code only used in test_tipc,
+            ignore it most of the time"""
+            if max_iters is not None and i >= max_iters:
+                break
+
             record_list['reader_time'].update(time.time() - tic)
 
-            # 4.1 forward
+            # Collect performance information when profiler_options is activate
+            add_profiler_step(profiler_options)
 
-            ###AMP###
+            # 4.1 forward
+            # AMP #
             if amp:
                 with paddle.amp.auto_cast(custom_black_list={"reduce_mean"}):
                     outputs = model(data, mode='train')
@@ -236,18 +247,18 @@ def train_model(cfg,
 
                 # log_record
                 for name, value in outputs.items():
-                    record_list[name].update(value, batch_size)
+                    record_list[name].update(value, valid_batch_size)
 
                 record_list['batch_time'].update(time.time() - tic)
                 tic = time.time()
 
                 if i % cfg.get("log_interval", 10) == 0:
                     ips = "ips: {:.5f} instance/sec.".format(
-                        batch_size / record_list["batch_time"].val)
+                        valid_batch_size / record_list["batch_time"].val)
                     log_batch(record_list, i, epoch + 1, cfg.epochs, "val", ips)
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
-                batch_size * record_list["batch_time"].count /
+                valid_batch_size * record_list["batch_time"].count /
                 record_list["batch_time"].sum)
             log_epoch(record_list, epoch + 1, "val", ips)
 
@@ -283,7 +294,7 @@ def train_model(cfg,
                         f"Already save the best model (hit_at_one){best}")
                 else:
                     logger.info(
-                        f"Already save the best model (top1 acc){int(best *10000)/10000}"
+                        f"Already save the best model (top1 acc){int(best * 10000) / 10000}"
                     )
 
         # 6. Save model and optimizer

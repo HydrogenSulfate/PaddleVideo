@@ -14,8 +14,8 @@
 
 import argparse
 import os
-import sys
 import os.path as osp
+import sys
 
 import paddle
 from paddle.jit import to_static
@@ -56,18 +56,25 @@ def trim_config(cfg):
     Trim it here.
     """
     model_name = cfg.model_name
-    if cfg.MODEL.backbone.get('pretrained'):
+    if cfg.MODEL.get('backbone') and cfg.MODEL.backbone.get('pretrained'):
         cfg.MODEL.backbone.pretrained = ""  # not ued when inference
 
     return cfg, model_name
 
 
 def get_input_spec(cfg, model_name):
-    if model_name in ['ppTSM', 'TSM', 'TSN', 'ppTSN']:
+    if model_name in ['ppTSM', 'TSM']:
         input_spec = [[
             InputSpec(
                 shape=[None, cfg.num_seg, 3, cfg.target_size, cfg.target_size],
                 dtype='float32'),
+        ]]
+    elif model_name in ['TSN', 'ppTSN']:
+        input_spec = [[
+            InputSpec(shape=[
+                None, cfg.num_seg * 10, 3, cfg.target_size, cfg.target_size
+            ],
+                      dtype='float32'),
         ]]
     elif model_name in ['BMN']:
         input_spec = [[
@@ -77,9 +84,27 @@ def get_input_spec(cfg, model_name):
         ]]
     elif model_name in ['TimeSformer']:
         input_spec = [[
-            InputSpec(
-                shape=[None, 3, cfg.num_seg, cfg.target_size, cfg.target_size],
-                dtype='float32'),
+            InputSpec(shape=[
+                None, 3, cfg.num_seg * 3, cfg.target_size, cfg.target_size
+            ],
+                      dtype='float32'),
+        ]]
+    elif model_name in ['AttentionLSTM']:
+        input_spec = [[
+            InputSpec(shape=[None, cfg.embedding_size, cfg.feature_dims[0]],
+                      dtype='float32'),  # for rgb_data
+            InputSpec(shape=[
+                None,
+            ], dtype='int64'),  # for rgb_len
+            InputSpec(shape=[None, cfg.embedding_size, cfg.feature_dims[0]],
+                      dtype='float32'),  # for rgb_mask
+            InputSpec(shape=[None, cfg.embedding_size, cfg.feature_dims[1]],
+                      dtype='float32'),  # for audio_data
+            InputSpec(shape=[
+                None,
+            ], dtype='int64'),  # for audio_len
+            InputSpec(shape=[None, cfg.embedding_size, cfg.feature_dims[1]],
+                      dtype='float32'),  # for audio_mask
         ]]
     elif model_name in ['SlowFast']:
         input_spec = [[

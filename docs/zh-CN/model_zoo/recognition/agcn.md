@@ -16,7 +16,7 @@
 ## 模型简介
 
 
-我们对[ST-GCN模型](./stgcn.md)进行了优化，实现了精度更高的AGCN模型，模型优化细节参考[AGCN模型详解]().
+我们对[ST-GCN模型](./stgcn.md)进行了优化，实现了精度更高的AGCN模型，模型优化细节参考[AGCN模型解析](https://www.bilibili.com/video/BV1w3411172G).
 
 
 ## 数据准备
@@ -68,7 +68,7 @@ python3.7 main.py --test -c configs/recognition/agcn/agcn_fsd.yaml  -w output/AG
 
 | Test_Data | Top-1 | checkpoints |
 | :----: | :----: | :---- |
-| Test_A | 62.29 | AGCN_fsd.pdparams |
+| Test_A | 62.29 | [AGCN_fsd.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/AGCN_fsd.pdparams) |
 
 
 ### NTU-RGB+D数据集模型测试
@@ -85,7 +85,7 @@ python3.7 main.py --test -c configs/recognition/agcn/agcn_ntucs.yaml -w output/A
 
 | split | Top-1 | checkpoints |
 | :----: | :----: | :---- |
-| cross-subject | 83.27 | AGCN_ntucs.pdparams |
+| cross-subject | 83.27 | [AGCN_ntucs.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/AGCN_ntucs.pdparams) |
 
 
 ## 模型推理
@@ -117,11 +117,11 @@ python3.7 tools/predict.py --input_file data/fsd10/example_skeleton.npy \
 
 ```
 Current video file: data/fsd10/example_skeleton.npy
-        top-1 class: 0
-        top-1 score: 0.8932635188102722
+        top-1 class: 27
+        top-1 score: 0.8965644240379333
 ```
 
-可以看到，使用在FSD-10上训练好的AGCN模型对`data/example_skeleton.npy`进行预测，输出的top1类别id为`0`，置信度为0.89。
+可以看到，使用在FSD上训练好的AGCN模型对`data/example_skeleton.npy`进行预测，输出的top1类别id为`27`，置信度为0.89。
 
 ## 参考论文
 

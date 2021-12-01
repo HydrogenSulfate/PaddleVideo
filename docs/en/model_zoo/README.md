@@ -8,10 +8,10 @@ We implemented action recgonition model and action localization model in this re
 
 | Field | Model | Config | Dataset | Metrics | ACC% | Download |
 | :--------------- | :--------: | :------------: | :------------: | :------------: | :------------: | :------------: |
-| action recognition | [**PP-TSM**](./recognition/pp-tsm.md) | [pptsm.yaml](../../../configs/recognition/pptsm/pptsm_k400_frames_dense.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 76.16 | [ppTSM.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.1/PPTSM/ppTSM_k400_dense_distill.pdparams) |
-| action recognition | [**PP-TSN**](./recognition/pp-tsn.md) | [pptsn.yaml](../../../configs/recognition/pptsn/pptsn_k400_videos.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 75.06 | [ppTSN.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/ppTSN_k400_8.pdparams) |
-| action recognition | [AGCN](./recognition/agcn.md) | [agcn.yaml](../../../configs/recognition/agcn/agcn_fsd.yaml) | [FSD](../dataset/fsd.md) | Top-1 | 90.66 | AGCN.pdparams |
-| action recognition | [ST-GCN](./recognition/stgcn.md) | [stgcn.yaml](../../../configs/recognition/stgcn/stgcn_fsd.yaml) | [FSD](../dataset/fsd.md) | Top-1 | 86.66 |  [STGCN.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/STGCN_fsd.pdparams) |
+| action recognition | [**PP-TSM**](./recognition/pp-tsm.md) | [pptsm.yaml](../../../configs/recognition/pptsm/pptsm_k400_frames_dense.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 76.16 | [PPTSM.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.1/PPTSM/ppTSM_k400_dense_distill.pdparams) |
+| action recognition | [**PP-TSN**](./recognition/pp-tsn.md) | [pptsn.yaml](../../../configs/recognition/pptsn/pptsn_k400_videos.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 75.06 | [PPTSN.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/ppTSN_k400_8.pdparams) |
+| action recognition | [AGCN](./recognition/agcn.md) | [agcn.yaml](../../../configs/recognition/agcn/agcn_fsd.yaml) | [FSD](../dataset/fsd.md) | Top-1 | 62.29 | [AGCN.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/AGCN_fsd.pdparams) |
+| action recognition | [ST-GCN](./recognition/stgcn.md) | [stgcn.yaml](../../../configs/recognition/stgcn/stgcn_fsd.yaml) | [FSD](../dataset/fsd.md) | Top-1 | 59.07 |  [STGCN.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/STGCN_fsd.pdparams) |
 | action recognition | [TimeSformer](./recognition/timesformer.md) | [timesformer.yaml](../../../configs/recognition/timesformer/timesformer_k400_videos.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 77.29 | [TimeSformer.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.2/TimeSformer_k400.pdparams) |
 | action recognition | [SlowFast](./recognition/slowfast.md) | [slowfast_multigrid.yaml](../../../configs/recognition/slowfast/slowfast_multigrid.yaml) | [Kinetics-400](../dataset/k400.md) | Top-1 | 75.84 | [SlowFast.pdparams](https://videotag.bj.bcebos.com/PaddleVideo/SlowFast/SlowFast_8*8.pdparams) |
 | action recognition | [TSM](./recognition/tsm.md) | [tsm.yaml](../../../configs/recognition/tsm/tsm_k400_frames.yaml)  | [Kinetics-400](../dataset/k400.md) | Top-1 | 70.86 | [TSM.pdparams](https://videotag.bj.bcebos.com/PaddleVideo-release2.1/TSM/TSM_k400.pdparams) |
@@ -33,3 +33,9 @@ We implemented action recgonition model and action localization model in this re
 - [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1), Ji Lin, Chuang Gan, Song Han
 
 - [Is Space-Time Attention All You Need for Video Understanding?](https://arxiv.org/pdf/2102.05095.pdf) Gedas Bertasius, Heng Wang, Lorenzo Torresani
+
+- [Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action Recognition](https://arxiv.org/abs/1801.07455), Sijie Yan, Yuanjun Xiong, Dahua Lin
+
+- [Two-Stream Adaptive Graph Convolutional Networks for Skeleton-Based Action Recognition](https://arxiv.org/abs/1805.07694), Lei Shi, Yifan Zhang, Jian Cheng, Hanqing Lu
+
+- [Skeleton-Based Action Recognition with Multi-Stream Adaptive Graph Convolutional Networks](https://arxiv.org/abs/1912.06971), Lei Shi, Yifan Zhang, Jian Cheng, Hanqing Lu
