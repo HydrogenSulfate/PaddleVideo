@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..metrics.ava_utils import collect_results_cpu
-import shutil
-import pickle
-import time
-import os
 import os.path as osp
 import time
+from contextlib import nullcontext
 
+import numpy as np
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
@@ -27,15 +24,11 @@ from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
 
 from ..loader.builder import build_dataloader, build_dataset
+from ..metrics.ava_utils import collect_results_cpu
 from ..modeling.builder import build_model
 from ..solver import build_lr, build_optimizer
 from ..utils import do_preciseBN
-from paddlevideo.utils import get_logger
-from paddlevideo.utils import (build_record, log_batch, log_epoch, save, load,
-                               mkdir)
-import sys
-import numpy as np
-from pathlib import Path
+
 paddle.framework.seed(1234)
 np.random.seed(1234)
 
@@ -187,41 +180,61 @@ def train_model(cfg,
             if amp:
                 with paddle.amp.auto_cast(custom_black_list={"reduce_mean"}):
                     outputs = model(data, mode='train')
-
                 avg_loss = outputs['loss']
                 if use_gradient_accumulation:
+                    # clear grad at every epoch begin
                     if i == 0:
                         optimizer.clear_grad()
+                    # Loss normalization
                     avg_loss /= cfg.GRADIENT_ACCUMULATION.num_iters
+                    # Loss scaling
                     scaled = scaler.scale(avg_loss)
-                    scaled.backward()
+                    # Get context to determine whether do GPU synchronization
+                    if (i + 1) % cfg.GRADIENT_ACCUMULATION.num_iters != 0:
+                        context = model.no_sync if (hasattr(
+                            model, "no_sync") and parallel) else nullcontext
+                    else:
+                        context = nullcontext
+                    # 4.2 backward
+                    with context():
+                        scaled.backward()
+                    # 4.3 minimize
                     if (i + 1) % cfg.GRADIENT_ACCUMULATION.num_iters == 0:
                         scaler.minimize(optimizer, scaled)
                         optimizer.clear_grad()
-                else:
+                else:  # general case
+                    # 4.2 backward
                     scaled = scaler.scale(avg_loss)
                     scaled.backward()
-                    # keep prior to 2.0 design
+                    # 4.3 minimize
                     scaler.minimize(optimizer, scaled)
                     optimizer.clear_grad()
             else:
                 outputs = model(data, mode='train')
-
-                # 4.2 backward
-                if use_gradient_accumulation and i == 0:  # Use gradient accumulation strategy
-                    optimizer.clear_grad()
                 avg_loss = outputs['loss']
-                avg_loss.backward()
-
-                # 4.3 minimize
-                if use_gradient_accumulation:  # Use gradient accumulation strategy
+                if use_gradient_accumulation:
+                    # clear grad at every epoch begin
+                    if i == 0:
+                        optimizer.clear_grad()
+                    # Loss normalization
+                    avg_loss /= cfg.GRADIENT_ACCUMULATION.num_iters
+                    # Get context to determine whether do GPU synchronization
+                    if (i + 1) % cfg.GRADIENT_ACCUMULATION.num_iters != 0:
+                        context = model.no_sync if (hasattr(
+                            model, "no_sync") and parallel) else nullcontext
+                    else:
+                        context = nullcontext
+                    # 4.2 backward
+                    with context():
+                        avg_loss.backward()
+                    # 4.3 minimize
                     if (i + 1) % cfg.GRADIENT_ACCUMULATION.num_iters == 0:
-                        for p in model.parameters():
-                            p.grad.set_value(
-                                p.grad / cfg.GRADIENT_ACCUMULATION.num_iters)
                         optimizer.step()
                         optimizer.clear_grad()
-                else:  # Common case
+                else:  # general case
+                    # 4.2 backward
+                    avg_loss.backward()
+                    # 4.3 minimize
                     optimizer.step()
                     optimizer.clear_grad()
 
