@@ -12,19 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+import random
+from collections.abc import Sequence
+
+import cv2
+import numpy as np
 import paddle
 import paddle.nn.functional as F
-import random
-import numpy as np
-import math
 from PIL import Image
+
 from ..registry import PIPELINES
-from collections.abc import Sequence
-import cv2
+from .base import BaseOperation
 
 
 @PIPELINES.register()
-class Scale(object):
+class Scale(BaseOperation):
     """
     Scale images.
     Args:
@@ -92,7 +95,7 @@ class Scale(object):
 
 
 @PIPELINES.register()
-class RandomCrop(object):
+class RandomCrop(BaseOperation):
     """
     Random crop images.
     Args:
@@ -139,7 +142,7 @@ class RandomCrop(object):
 
 
 @PIPELINES.register()
-class CenterCrop(object):
+class CenterCrop(BaseOperation):
     """
     Center crop images.
     Args:
@@ -175,7 +178,7 @@ class CenterCrop(object):
 
 
 @PIPELINES.register()
-class MultiScaleCrop(object):
+class MultiScaleCrop(BaseOperation):
     """
     Random crop images in with multiscale sizes
     Args:
@@ -299,7 +302,7 @@ class MultiScaleCrop(object):
 
 
 @PIPELINES.register()
-class RandomFlip(object):
+class RandomFlip(BaseOperation):
     """
     Random Flip images.
     Args:
@@ -333,7 +336,7 @@ class RandomFlip(object):
 
 
 @PIPELINES.register()
-class Image2Array(object):
+class Image2Array(BaseOperation):
     """
     transfer PIL.Image to Numpy array and transpose dimensions from 'dhwc' to 'dchw'.
     Args:
@@ -376,7 +379,7 @@ class Image2Array(object):
 
 
 @PIPELINES.register()
-class Normalization(object):
+class Normalization(BaseOperation):
     """
     Normalization.
     Args:
@@ -413,7 +416,7 @@ class Normalization(object):
 
 
 @PIPELINES.register()
-class JitterScale(object):
+class JitterScale(BaseOperation):
     """
     Scale image, while the target short size is randomly select between min_size and max_size.
     Args:
@@ -484,7 +487,7 @@ class JitterScale(object):
 
 
 @PIPELINES.register()
-class MultiCrop(object):
+class MultiCrop(BaseOperation):
     """
     Random crop image.
     This operation can perform multi-crop during multi-clip test, as in slowfast model.
@@ -563,7 +566,7 @@ class MultiCrop(object):
 
 
 @PIPELINES.register()
-class PackOutput(object):
+class PackOutput(BaseOperation):
     """
     In slowfast model, we want to get slow pathway from fast pathway based on
     alpha factor.
@@ -595,7 +598,7 @@ class PackOutput(object):
 
 
 @PIPELINES.register()
-class GroupFullResSample(object):
+class GroupFullResSample(BaseOperation):
     def __init__(self, crop_size, flip=False):
         self.crop_size = crop_size if not isinstance(crop_size, int) else (
             crop_size, crop_size)
@@ -635,7 +638,7 @@ class GroupFullResSample(object):
 
 
 @PIPELINES.register()
-class TenCrop:
+class TenCrop(BaseOperation):
     """
     Crop out 5 regions (4 corner points + 1 center point) from the picture,
     and then flip the cropping result to get 10 cropped images, which can make the prediction result more robust.
@@ -676,7 +679,7 @@ class TenCrop:
 
 
 @PIPELINES.register()
-class UniformCrop:
+class UniformCrop(BaseOperation):
     """
     Perform uniform spatial sampling on the images,
     select the two ends of the long side and the middle position (left middle right or top middle bottom) 3 regions.
