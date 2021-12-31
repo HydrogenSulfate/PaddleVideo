@@ -20,40 +20,35 @@ import numpy as np
 import paddle
 
 from ..registry import PIPELINES
-from .base import (_ARRAY, _BOX, _IMSIZE, _IMTYPE, _RESULT, _SCALE,
-                   BaseOperation)
+from .base import (_IMSIZE, _RESULT, BaseOperation)
 
 
 @PIPELINES.register()
 class Scale(BaseOperation):
-    """
-    Scale images.
+    """Scale images
+
     Args:
-        short_size(float | int): Short size of an image will be scaled to the short_size.
-        fixed_ratio(bool): Set whether to zoom according to a fixed ratio. default: True
-        # do_round(bool): Whether to round up when calculating the zoom ratio. default: False
-        backend(str): Choose pillow or cv2 as the graphics processing backend. default: 'pillow'
+        scale_size (int): Short size of an image, which will be scaled to scale_size
+        keep_ratio (bool, optional): Whether keep original edge ratio. Defaults to True.
+        fixed_ratio (Union[int, float, None], optional): Whether use fixed ratio instead of original edge ratio. Defaults to None.
+        interpolation (str, optional): Interpolation method. Defaults to 'bilinear'.
+
     """
     def __init__(self,
                  scale_size: int,
                  keep_ratio: bool = True,
                  fixed_ratio: Union[int, float, None] = None,
                  interpolation: str = 'bilinear'):
-
         if keep_ratio:
-            # for short side scale method
-            scale_size = (np.inf, scale_size)
+            scale_size = (np.inf, scale_size)  # short side scale
+            if fixed_ratio is not None:
+                raise ValueError(
+                    f"fixed_ratio must be None when keep_ratio is True")
         else:
-            scale_size = (scale_size, scale_size)
+            if fixed_ratio is None:
+                scale_size = (scale_size, scale_size)  # fixed side scale
         self.scale_size = scale_size
         self.keep_ratio = keep_ratio
-        if isinstance(fixed_ratio, (int, float, None)):
-            if fixed_ratio <= 0:
-                raise ValueError(f"fixed_ratio must > 0, but got {fixed_ratio}")
-        else:
-            raise TypeError(
-                f"fixed_ratio must be int or float, but got {type(fixed_ratio)}"
-            )
         self.fixed_ratio = fixed_ratio
         self.interpolation = interpolation
         if self.fixed_ratio and self.keep_ratio:
@@ -61,26 +56,26 @@ class Scale(BaseOperation):
                 f"keep_ratio can't be true when fixed_ratio is provided")
 
     def __call__(self, results: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Performs resize operations.
+        """Apply scale operations on images
+
         Args:
-            imgs (Sequence[PIL.Image]): List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            resized_imgs: List where each item is a PIL.Image after scaling.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
 
         if self.fixed_ratio is not None:
-            if min(w, h) == self.scale_size[1]:
+            if min(w, h) == self.scale_size:
                 ow, oh = w, h
             elif w < h:
-                ow, oh = self.scale_size[1], int(self.scale_size[1] *
-                                                 self.fixed_ratio)
+                ow, oh = self.scale_size, int(self.scale_size *
+                                              self.fixed_ratio)
             else:
-                ow, oh = int(self.scale_size[1] *
-                             self.fixed_ratio), self.scale_size[1]
+                ow, oh = int(self.scale_size *
+                             self.fixed_ratio), self.scale_size
         elif self.keep_ratio:
             ow, oh = self.get_scaled_size((w, h), self.scale_size)
         else:
@@ -105,20 +100,16 @@ class RandomCrop(BaseOperation):
         target_size(int): Random crop a square with the target_size from an image.
     """
     def __init__(self, target_size: int):
-        if isinstance(target_size, int):
-            if target_size <= 0:
-                raise ValueError(
-                    f"target_size must >= 0, but got {target_size}")
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs random crop operations.
+        """Apply randomcrop operations on images
+
         Args:
-            imgs: List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            crop_imgs: List where each item is a PIL.Image after random crop.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
@@ -145,29 +136,22 @@ class RandomCrop(BaseOperation):
 
 @PIPELINES.register()
 class CenterCrop(BaseOperation):
-    """
-    Center crop images.
+    """Center crop images.
+
     Args:
-        target_size(int): Center crop a square with the target_size from an image.
-        do_round(bool): Whether to round up the coordinates of the upper left corner of the cropping area. default: True
+        target_size (int): Center crop a square with the target_size from an image.
     """
     def __init__(self, target_size: int):
-        if isinstance(target_size, int):
-            if target_size <= 0:
-                raise ValueError(
-                    f"target_size must >= 0, but got {target_size}")
-
         self.target_size = target_size
-        # self.do_round = do_round
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs Center crop operations.
+        """Apply centercrop operations on images
+
         Args:
-            imgs: List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            ccrop_imgs: List where each item is a PIL.Image after Center crop.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
@@ -192,32 +176,25 @@ class CenterCrop(BaseOperation):
 
 @PIPELINES.register()
 class MultiScaleCrop(BaseOperation):
-    """
-    Random crop images in with multiscale sizes
+    """Random crop images in with multiscale sizes
+
     Args:
-        target_size(int): Random crop a square with the target_size from an image.
-        scales(int): List of candidate cropping scales.
-        max_distort(int): Maximum allowable deformation combination distance.
-        fix_crop(int): Whether to fix the cutting start point.
-        allow_duplication(int): Whether to allow duplicate candidate crop starting points.
-        more_fix_crop(int): Whether to allow more cutting starting points.
+        target_size (int): Random crop a square with the target_size from an image.
+        scales (int, optional): List of candidate cropping scales.. Defaults to None.
+        max_distort (int, optional): Maximum allowable deformation combination distance. Defaults to 1.
+        fix_crop (bool, optional): Whether to fix the cutting start point. Defaults to True.
+        allow_duplication (bool, optional): Whether to allow duplicate candidate crop starting points. Defaults to False.
+        more_fix_crop (bool, optional): Whether to allow more cutting starting points. Defaults to True.
+        interpolation (str, optional): Interpolation method. Defaults to 'bilinear'.
     """
-    def __init__(
-            self,
-            target_size:
-        int,  # NOTE: named target size now, but still pass short size in it!
-            scales: int = None,
-            max_distort: int = 1,
-            fix_crop: bool = True,
-            allow_duplication: bool = False,
-            more_fix_crop: bool = True,
-            interpolation: str = 'bilinear'):
-
-        if isinstance(target_size, int):
-            if target_size <= 0:
-                raise ValueError(
-                    f"target_size must >= 0, but got {target_size}")
-
+    def __init__(self,
+                 target_size: int,
+                 scales: int = None,
+                 max_distort: int = 1,
+                 fix_crop: bool = True,
+                 allow_duplication: bool = False,
+                 more_fix_crop: bool = True,
+                 interpolation: str = 'bilinear'):
         self.target_size = (target_size, target_size)
         self.scales = scales if scales else [1, .875, .75, .66]
         self.max_distort = max_distort
@@ -227,13 +204,13 @@ class MultiScaleCrop(BaseOperation):
         self.interpolation = interpolation
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs MultiScaleCrop operations.
-        Args:
-            imgs: List where wach item is a PIL.Image.
-            XXX:
-        results:
+        """Apply multiscalecrop operations on images
 
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
@@ -294,7 +271,7 @@ class MultiScaleCrop(BaseOperation):
 
         tw, th, x1, y1 = _sample_crop_size((w, h))
         x2 = x1 + tw
-        y2 = x2 + th
+        y2 = y1 + th
         if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
             crop_imgs = self.apply_crop(imgs, (x1, y1, x2, y2))
             resized_crop_imgs = self.apply_resize(crop_imgs, self.target_size,
@@ -302,7 +279,7 @@ class MultiScaleCrop(BaseOperation):
         else:
             crop_imgs = [self.apply_crop(img, (x1, y1, x2, y2)) for img in imgs]
             resized_crop_imgs = [
-                self.apply_resize(crop_img, (x1, y1, x2, y2))
+                self.apply_resize(crop_img, self.target_size)
                 for crop_img in crop_imgs
             ]
         results['imgs'] = resized_crop_imgs
@@ -311,23 +288,24 @@ class MultiScaleCrop(BaseOperation):
 
 @PIPELINES.register()
 class RandomFlip(BaseOperation):
-    """
-    Random Flip images.
+    """Random Flip images.
+
     Args:
-        p(float): Random flip images with the probability p.
+        prob (float, optional): Random flip images with the probability prob. Defaults to 0.5.
+        direction (str, optional): Flip direction. Defaults to 'horizontal'.
     """
     def __init__(self, prob: float = 0.5, direction: str = 'horizontal'):
         self.prob = prob
         self.direction = direction
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs random flip operations.
+        """Apply randomflip operations on images
+
         Args:
-            imgs: List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            flip_imgs: List where each item is a PIL.Image after random flip.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         flip = random.random() < self.prob
@@ -346,10 +324,10 @@ class RandomFlip(BaseOperation):
 
 @PIPELINES.register()
 class Image2Array(BaseOperation):
-    """
-    transfer PIL.Image to Numpy array and transpose dimensions from 'dhwc' to 'dchw'.
+    """Transfer image(s) list to arrays like numpy.ndarray with certain format.
+
     Args:
-        transpose: whether to transpose or not, default True, False for slowfast.
+        format_shape (str, optional): format shape. Defaults to 'TCHW'.
     """
     def __init__(self, format_shape: str = 'TCHW'):
         assert format_shape in [
@@ -358,13 +336,13 @@ class Image2Array(BaseOperation):
         self.format_shape = format_shape
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs Image to NumpyArray operations.
+        """Apply image2array operations on images
+
         Args:
-            imgs: List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            np_imgs: Numpy array.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         if isinstance(imgs, paddle.Tensor):
@@ -383,12 +361,14 @@ class Image2Array(BaseOperation):
 
 @PIPELINES.register()
 class Normalization(BaseOperation):
-    """
-    Normalization.
+    """Normalization
+
     Args:
-        mean(Sequence[float]): mean values of different channels.
-        std(Sequence[float]): std values of different channels.
-        tensor_shape(list): size of mean, default [3,1,1]. For slowfast, [1,1,1,3]
+        mean (list): mean values of different channels.
+        std (list): std values of different channels.
+        tensor_shape (list, optional): size of mean. Defaults to [3, 1, 1].
+        to_tensor (bool, optional): Whether convert normalization result to tensor. Defaults to False.
+
     """
     def __init__(self,
                  mean: list,
@@ -406,12 +386,13 @@ class Normalization(BaseOperation):
         self.to_tensor = to_tensor
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs normalization operations.
+        """Apply normalization operations on images
+
         Args:
-            imgs: Numpy array.
-        return:
-            np_imgs: Numpy array after normalization.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         imgs = self.apply_normalization(imgs, self.mean, self.std)
@@ -440,13 +421,13 @@ class JitterScale(BaseOperation):
         self.short_cycle_factors = short_cycle_factors
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs jitter resize operations.
+        """Apply jitterscale operations on images
+
         Args:
-            imgs (Sequence[PIL.Image]): List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            resized_imgs: List where each item is a PIL.Image after scaling.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         short_cycle_idx = results.get('short_cycle_idx')
         if short_cycle_idx in [0, 1]:
@@ -485,11 +466,13 @@ class JitterScale(BaseOperation):
 
 @PIPELINES.register()
 class MultiCrop(BaseOperation):
-    """
-    Random crop image.
-    This operation can perform multi-crop during multi-clip test, as in slowfast model.
+    """Random crop image.
+
     Args:
-        target_size(int): Random crop a square with the target_size from an image.
+        target_size (int): Random crop a square with the target_size from an image
+        default_crop_size (int, optional): default_crop_size. Defaults to 224.
+        short_cycle_factors (List[float], optional): short_cycle_factors. Defaults to [0.5, 0.7071].
+        test_mode (bool, optional): Whether in test mode. Defaults to False.
     """
     def __init__(self,
                  target_size: int,
@@ -502,13 +485,13 @@ class MultiCrop(BaseOperation):
         self.test_mode = test_mode
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
-        Performs random crop operations.
+        """Apply multicrop operations on images
+
         Args:
-            imgs: List where each item is a PIL.Image.
-            For example, [PIL.Image0, PIL.Image1, PIL.Image2, ...]
-        return:
-            crop_imgs: List where each item is a PIL.Image after random crop.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
         spatial_sample_index = results['spatial_sample_index']
@@ -569,16 +552,23 @@ class MultiCrop(BaseOperation):
 
 @PIPELINES.register()
 class PackOutput(BaseOperation):
-    """
-    In slowfast model, we want to get slow pathway from fast pathway based on
-    alpha factor.
+    """In slowfast model, we want to get slow pathway from fast pathway based on alpha factor.
+
     Args:
-        alpha(int): temporal length of fast/slow
+        alpha (int): temporal length of fast/slow
     """
-    def __init__(self, alpha: float):
+    def __init__(self, alpha: int):
         self.alpha = alpha
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply packoutput operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         fast_pathway = results['imgs']
 
         # sample num points between start and end
@@ -601,6 +591,12 @@ class PackOutput(BaseOperation):
 
 @PIPELINES.register()
 class GroupFullResSample(BaseOperation):
+    """GroupFullResSample
+
+    Args:
+        crop_size (int): crop size
+        flip (bool, optional): Whether take extra flip. Defaults to False.
+    """
     def __init__(self, crop_size: int, flip: bool = False):
         self.crop_size = (crop_size, crop_size)
         self.flip = flip
@@ -642,16 +638,24 @@ class GroupFullResSample(BaseOperation):
 
 @PIPELINES.register()
 class TenCrop(BaseOperation):
-    """
-    Crop out 5 regions (4 corner points + 1 center point) from the picture,
-    and then flip the cropping result to get 10 cropped images, which can make the prediction result more robust.
+    """Crop out 5 regions (4 corner points + 1 center point) from the picture,
+        and then flip the cropping result to get 10 cropped images, which can make the prediction result more robust.
+
     Args:
-        target_size(int | tuple[int]): (w, h) of target size for crop.
+        target_size (int): (target_size, target_size) of target size for crop
     """
     def __init__(self, target_size: int):
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply groupfullressample operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
         tw, th = self.target_size
@@ -681,17 +685,24 @@ class TenCrop(BaseOperation):
 
 @PIPELINES.register()
 class UniformCrop(BaseOperation):
-    """
-    Perform uniform spatial sampling on the images,
-    select the two ends of the long side and the middle position (left middle right or top middle bottom) 3 regions.
+    """Perform uniform spatial sampling on the images,
+        select the two ends of the long side and the middle position (left middle right or top middle bottom) 3 regions.
+
     Args:
-        target_size(int | tuple[int]): (w, h) of target size for crop.
+        target_size (int): (target_size, target_size) of target size for crop.
     """
     def __init__(self, target_size: int):
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply uniformcrop operations on images
 
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         imgs = results['imgs']
         w, h = self.get_size(imgs)
         tw, th = self.target_size
@@ -721,12 +732,23 @@ class UniformCrop(BaseOperation):
 
 @PIPELINES.register()
 class GroupResize(BaseOperation):
+    """Resize images in image pyramid
+
+    Args:
+        height (int): image height
+        width (int): image width
+        scale (int): number of scales in image pyramid
+        K (List[List]): Camera intrinsics matrix.
+        mode (str, optional): [description]. Defaults to 'train'.
+        interpolation (str, optional): Interpolation method. Defaults to 'lanczos'.
+    """
     def __init__(self,
                  height: int,
                  width: int,
                  scale: int,
                  K: List[List],
-                 mode: str = 'train'):
+                 mode: str = 'train',
+                 interpolation: str = 'lanczos'):
         self.height = height
         self.width = width
         self.scale = scale
@@ -736,18 +758,26 @@ class GroupResize(BaseOperation):
         for i in range(self.scale):
             s = 2**i
             self.resize[i] = paddle.vision.transforms.Resize(
-                (self.height // s, self.width // s), interpolation='lanczos')
+                (self.height // s, self.width // s),
+                interpolation=interpolation)
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply groupresize operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
+        imgs: Dict[Tuple[str, int, int], Any] = results['imgs']
         if self.mode == 'infer':
-            imgs: Dict[Tuple, Any] = results['imgs']
             for k in list(imgs):  # ("color", 0, -1)
                 if "color" in k or "color_n" in k:
                     n, im, _ = k
                     for i in range(self.scale):
                         imgs[(n, im, i)] = self.resize[i](imgs[(n, im, i - 1)])
         else:
-            imgs = results['imgs']
             for scale in range(self.scale):
                 K = self.K.copy()
 
@@ -771,6 +801,14 @@ class GroupResize(BaseOperation):
 @PIPELINES.register()
 class ColorJitter(BaseOperation):
     """Randomly change the brightness, contrast, saturation and hue of an image.
+
+    Args:
+        brightness (float, optional): brightness. Defaults to 0.0.
+        contrast (float, optional): contrast. Defaults to 0.0.
+        saturation (float, optional): saturation. Defaults to 0.0.
+        hue (float, optional): hue. Defaults to 0.0.
+        mode (str, optional): mode. Defaults to 'train'.
+        prob (float, optional): Whether do colorjitter with probability prob. Defaults to 0.5.
     """
     def __init__(self,
                  brightness: float = 0.0,
@@ -785,14 +823,14 @@ class ColorJitter(BaseOperation):
         self.prob = prob
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """
+        """Apply colorjitter operations on images
+
         Args:
-            results (PIL Image): Input image.
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
 
         Returns:
-            PIL Image: Color jittered image.
+            Dict[str, Any]: Processed data.
         """
-
         color_aug = self.prob < random.random()
         imgs = results['imgs']
         for k in list(imgs):
@@ -821,18 +859,33 @@ class ColorJitter(BaseOperation):
 
 @PIPELINES.register()
 class GroupRandomFlip(BaseOperation):
-    def __init__(self, prob: float = 0.5):
+    """GroupRandomFlip
+
+    Args:
+        prob (float, optional): Whether do flip with probability prob. Defaults to 0.5.
+        direction (str, optional): Flip direction. Defaults to 'horizontal'.
+    """
+    def __init__(self, prob: float = 0.5, direction: str = 'horizontal'):
         self.prob = prob
+        self.direction = direction
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply grouprandomflip operations on images
 
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         imgs = results['imgs']
         do_flip = self.prob < random.random()
         if do_flip:
             for k in list(imgs):
                 if "color" in k or "color_n" in k:
                     n, im, i = k
-                    imgs[(n, im, i)] = self.apply_flip(imgs[(n, im, i)], )
+                    imgs[(n, im, i)] = self.apply_flip(imgs[(n, im, i)],
+                                                       self.direction)
             if "depth_gt" in imgs:
                 imgs['depth_gt'] = np.array(np.fliplr(imgs['depth_gt']))
 
@@ -842,10 +895,20 @@ class GroupRandomFlip(BaseOperation):
 
 @PIPELINES.register()
 class ToArray(BaseOperation):
+    """Convert images to array.
+    """
     def __init__(self):
         pass
 
-    def __call__(self, results: _RESULT):
+    def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply toarray operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         imgs = results['imgs']
         for k in list(imgs):
             if "color" in k or "color_n" in k or "color_aug" in k or "color_n_aug" in k:

@@ -13,14 +13,18 @@
 # limitations under the License.
 
 import os
+
 import numpy as np
+
+from .base import BaseOperation
+
 from ..registry import PIPELINES
 """pipeline ops for Activity Net.
 """
 
 
 @PIPELINES.register()
-class LoadFeat(object):
+class LoadFeat(BaseOperation):
     def __init__(self, feat_path):
         self.feat_path = feat_path
 
@@ -37,7 +41,7 @@ class LoadFeat(object):
 
 
 @PIPELINES.register()
-class GetMatchMap(object):
+class GetMatchMap(BaseOperation):
     def __init__(self, tscale):
         self.tscale = tscale
         self.tgap = 1. / self.tscale
@@ -65,7 +69,7 @@ class GetMatchMap(object):
 
 
 @PIPELINES.register()
-class GetVideoLabel(object):
+class GetVideoLabel(BaseOperation):
     def __init__(self, tscale, dscale, datatype="float32"):
         self.tscale = tscale
         self.dscale = dscale

@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
-import numpy as np
-from PIL import Image
-import decord as de
 import copy
 import json
-from ..registry import PIPELINES
+import random
 
+import numpy as np
 from paddlenlp.transformers import BertTokenizer
+
+from ..registry import PIPELINES
+from .base import BaseOperation
 
 
 @PIPELINES.register()
-class FeaturePadding(object):
+class FeaturePadding(BaseOperation):
     """
     Padding feature to target shape.
     """
@@ -85,7 +85,7 @@ class FeaturePadding(object):
 
 
 @PIPELINES.register()
-class RandomCap(object):
+class RandomCap(BaseOperation):
     def __init__(self, caption_path):
         """
         Tokenize caption
@@ -124,7 +124,7 @@ class RandomCap(object):
 
 
 @PIPELINES.register()
-class Tokenize(object):
+class Tokenize(BaseOperation):
     def __init__(self, ):
         """
         Tokenize caption
@@ -140,7 +140,7 @@ class Tokenize(object):
 
 
 @PIPELINES.register()
-class RandomMask(object):
+class RandomMask(BaseOperation):
     def __init__(self,
                  max_seq_length=36,
                  max_action_length=5,

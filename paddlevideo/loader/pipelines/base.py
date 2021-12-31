@@ -1,6 +1,4 @@
-import functools
-from pickle import DICT
-from typing import Any, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import cv2
 import numpy as np
@@ -13,9 +11,9 @@ _SCALE = Union[int, float, Tuple[int, int]]
 _IMTYPE = Union[np.ndarray, Image.Image, paddle.Tensor]
 _BOX = Tuple[int, int, int, int]
 _ARRAY = Union[List, np.ndarray, paddle.Tensor]
-_RESULT = DICT[str, Any]
+_RESULT = Dict[str, Any]
 
-pillow_interp_codes = {
+PILLOW_INTERP_CODES = {
     "nearest": Image.NEAREST,
     "bilinear": Image.BILINEAR,
     "bicubic": Image.BICUBIC,
@@ -24,14 +22,14 @@ pillow_interp_codes = {
     "hamming": Image.HAMMING,
     "antialias": Image.ANTIALIAS
 }
-cv2_interp_codes = {
+CV2_INTERP_CODES = {
     "nearest": cv2.INTER_NEAREST,
     "bilinear": cv2.INTER_LINEAR,
     "bicubic": cv2.INTER_CUBIC,
     "area": cv2.INTER_AREA,
     "lanczos": cv2.INTER_LANCZOS4
 }
-tensor_interp_codes = {
+TENSOR_INTERP_CODES = {
     "nearest": "nearest",
     "bilinear": "bilinear",
     "bicubic": "bicubic",
@@ -39,12 +37,12 @@ tensor_interp_codes = {
     "area": "area",
 }
 
-pillow_flip_code = {
+PILLOW_FLIP_CODE = {
     "horizontal": Image.FLIP_LEFT_RIGHT,
     "vertical": Image.FLIP_TOP_BOTTOM
 }
-cv2_flip_codes = {"horizontal": 1, "vertical": 0}
-tensor_flip_codes = {"horizontal": 0, "vertical": 1}
+CV2_FLIP_CODES = {"horizontal": 1, "vertical": 0}
+TENSOR_FLIP_CODES = {"horizontal": 0, "vertical": 1}
 
 # def batch_enable(operation_func):
 #     @functools.wraps(operation_func)
@@ -52,6 +50,12 @@ tensor_flip_codes = {"horizontal": 0, "vertical": 1}
 #         print(args[0])
 #         return operation_func(*args, **kwargs)
 #     return batch_apply
+
+# def varname(p):
+#     for line in inspect.getframeinfo(inspect.currentframe().f_back)[3]:
+#         m = re.search(r'\bvarname\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)', line)
+#         if m:
+#             return m.group(1)
 
 
 class BaseOperation(object):
@@ -114,14 +118,18 @@ class BaseOperation(object):
         else:
             return new_size
 
-    def apply_resize(self, img: _IMTYPE, size: _IMSIZE,
-                     interpolation: str) -> _IMTYPE:
+    def apply_resize(self,
+                     img: _IMTYPE,
+                     size: _IMSIZE,
+                     interpolation: str,
+                     to_numpy: bool = False) -> _IMTYPE:
         """Apply resize function to input image(s)
 
         Args:
             img (_IMAGE): input image(s)
             size (_IMSIZE): target size which resized to, which contains (w, h)
-            interpolation (str) : interpolation method for resize function
+            interpolation (str): interpolation method for resize function
+            to_numpy (bool, optional): Whether convert to numpy.ndarray after resize. Defaults to False.
 
         Returns:
             _IMAGE: Resized images(s)
@@ -129,19 +137,22 @@ class BaseOperation(object):
         if isinstance(img, np.ndarray):
             return cv2.resize(src=img,
                               dsize=size,
-                              interpolation=cv2_interp_codes[interpolation])
+                              interpolation=CV2_INTERP_CODES[interpolation])
         elif isinstance(img, Image.Image):
-            return img.resize(size=size,
-                              resample=pillow_interp_codes[interpolation])
+            img = img.resize(size=size,
+                             resample=PILLOW_INTERP_CODES[interpolation])
+            if to_numpy:
+                return np.array(img)
+            return img
         elif isinstance(img, paddle.Tensor):
             if img.ndim != 4:
                 raise ValueError(
                     f"Tensor must be 4 dim when resize, but got {img.ndim}")
             # TODO: Only support 'NCHW' format currently!
             return F.interpolate(
-                img,  # [n,c,h,w]
+                img,  # [*,*,h,w]
                 size=size[::-1],  # (w,h) to (h,w)
-                mode=tensor_interp_codes[interpolation],
+                mode=TENSOR_INTERP_CODES[interpolation],
                 data_format="NCHW",
                 align_corners=False)
         else:
@@ -166,18 +177,18 @@ class BaseOperation(object):
         if isinstance(img, np.ndarray):
             if inplace:
                 return cv2.flip(src=img,
-                                flipCode=cv2_flip_codes[direction],
+                                flipCode=CV2_FLIP_CODES[direction],
                                 dst=img)
             else:
-                return cv2.flip(src=img, flipCode=cv2_flip_codes[direction])
+                return cv2.flip(src=img, flipCode=CV2_FLIP_CODES[direction])
         elif isinstance(img, Image.Image):
-            return img.transpose(pillow_flip_code[direction])
+            return img.transpose(PILLOW_FLIP_CODE[direction])
         elif isinstance(img, paddle.Tensor):
             if img.ndim != 4:
                 raise ValueError(
                     f"Tensor must be 4 dim when resize, but got {img.ndim}")
             # TODO: Only support '**HW' format currently!
-            return paddle.flip(img, axis=tensor_flip_codes[direction])
+            return paddle.flip(img, axis=TENSOR_FLIP_CODES[direction])
         else:
             raise TypeError(
                 f"Input images must be numpy.ndarray or PIL.Image.Image or \
