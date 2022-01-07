@@ -894,7 +894,7 @@ class GroupRandomFlip(BaseOperation):
                     imgs[(n, im, i)] = self.im_flip(imgs[(n, im, i)],
                                                     self.direction)
             if "depth_gt" in imgs:
-                imgs['depth_gt'] = np.array(np.fliplr(imgs['depth_gt']))
+                imgs['depth_gt'] = self.im_flip(imgs['depth_gt'])
 
         results['imgs'] = imgs
         return results
