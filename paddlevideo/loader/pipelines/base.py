@@ -222,16 +222,16 @@ class BaseOperation(object):
 
     def im_norm(self,
                 img: _IMTYPE,
-                mean: _ARRAY,
-                std: _ARRAY,
+                mean: np.ndarray,
+                std: np.ndarray,
                 inplace: bool = False,
                 to_bgr: bool = False) -> _IMTYPE:
         """Apply normalization to input image(s)
 
         Args:
             img (_IMAGE): input image(s)
-            mean (_ARRAY): mean value array to subtract
-            std (_ARRAY): std value to divide
+            mean (np.ndarray): mean value array to subtract
+            std (np.ndarray): std value to divide
             inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
             to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, and only supprt with cv2). Default to False.
         Returns:
@@ -245,9 +245,9 @@ class BaseOperation(object):
             if to_bgr:
                 cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
             if inplace:
-                mean = mean.reshape(1, -1).astype('float64')  # [1, 3]
-                std_inv = 1 / np.float64(std.reshape(
-                    1, -1))  # [1, 3], reciprocal of std
+                mean = mean.reshape(1, -1).astype("float64")  # [1, 3]
+                std_inv = 1 / (std.reshape(1, -1).astype("float64")
+                               )  # [1, 3], reciprocal of std
                 cv2.subtract(img, mean, img)  # inplace
                 cv2.multiply(img, std_inv, img)  # inplace
                 return img
