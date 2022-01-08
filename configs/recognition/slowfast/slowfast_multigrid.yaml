@@ -49,7 +49,7 @@ PIPELINE:
           target_size: 224
       - RandomFlip:
       - Image2Array:
-          transpose: False
+          format_shape: 'THWC'
       - Normalization:
           mean: [0.45, 0.45, 0.45]
           std: [0.225, 0.225, 0.225]
@@ -70,7 +70,7 @@ PIPELINE:
           target_size: 224
       - RandomFlip:
       - Image2Array:
-          transpose: False
+          format_shape: 'THWC'
       - Normalization:
           mean: [0.45, 0.45, 0.45]
           std: [0.225, 0.225, 0.225]
@@ -92,7 +92,7 @@ PIPELINE:
           target_size: 224
           test_mode: True
       - Image2Array:
-          transpose: False
+          format_shape: 'THWC'
       - Normalization:
           mean: [0.45, 0.45, 0.45]
           std: [0.225, 0.225, 0.225]

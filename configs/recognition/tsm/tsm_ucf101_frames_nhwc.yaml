@@ -51,7 +51,7 @@ PIPELINE: #PIPELINE field
                 allow_duplication: True
             - RandomFlip:
             - Image2Array:
-                transpose: False
+                format_shape: 'THWC'
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
@@ -73,7 +73,7 @@ PIPELINE: #PIPELINE field
             - CenterCrop:
                 target_size: 224
             - Image2Array:
-                transpose: False
+                format_shape: 'THWC'
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
@@ -95,7 +95,7 @@ PIPELINE: #PIPELINE field
             - CenterCrop:
                 target_size: 224
             - Image2Array:
-                transpose: False
+                format_shape: 'THWC'
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]

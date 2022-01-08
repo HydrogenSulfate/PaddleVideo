@@ -14,7 +14,7 @@
 
 import math
 import random
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Sequence, Tuple, Union
 
 import numpy as np
 import paddle
@@ -334,8 +334,8 @@ class Image2Array(BaseOperation):
     """
     def __init__(self, format_shape: str = 'TCHW'):
         assert format_shape in [
-            'TCHW', 'CTHW'
-        ], f"Target format must in ['TCHW', 'CTHW'], but got {format_shape}"
+            'TCHW', 'CTHW', 'THWC'
+        ], f"Target format must in ['TCHW', 'CTHW', 'THWC'], but got {format_shape}"
         self.format_shape = format_shape
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -357,6 +357,8 @@ class Image2Array(BaseOperation):
             perm = (3, 0, 1, 2)
         elif self.format_shape == 'TCHW':
             perm = (0, 3, 1, 2)
+        elif self.format_shape == 'THWC':
+            perm = (0, 1, 2, 3)
         else:
             raise ValueError(
                 f"format shape only support 'CTHW' and 'TCHW', but got {self.format_shape}"
@@ -380,7 +382,7 @@ class Normalization(BaseOperation):
     def __init__(self,
                  mean: _ARRAY,
                  std: _ARRAY,
-                 tensor_shape: _ARRAY = [3, 1, 1],
+                 tensor_shape: Sequence[int] = [3, 1, 1],
                  to_tensor: bool = False):
         if not isinstance(mean, list):
             raise TypeError(f'mean must be list, but got {type(mean)}')
