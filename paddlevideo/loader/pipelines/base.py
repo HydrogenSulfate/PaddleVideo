@@ -241,7 +241,8 @@ class BaseOperation(object):
             img = np.array(img)
         if isinstance(img, np.ndarray):
             if img.dtype == np.uint8:
-                raise TypeError(f"img.dtype must be float, but got {img.dtype}")
+                raise TypeError(
+                    f"img.dtype can't be uint8, but got {img.dtype}")
             if to_bgr:
                 cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
             if inplace:

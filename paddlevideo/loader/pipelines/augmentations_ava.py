@@ -537,32 +537,6 @@ class Flip(BaseOperation):
         return results
 
 
-def imnormalize_(img: np.ndarray,
-                 mean: np.ndarray,
-                 std: np.ndarray,
-                 to_rgb: bool = True) -> np.ndarray:
-    """Inplace normalize an image with mean and std.
-
-    Args:
-        img (ndarray): Image to be normalized.
-        mean (ndarray): The mean to be used for normalize.
-        std (ndarray): The std to be used for normalize.
-        to_rgb (bool): Whether to convert to rgb.
-
-    Returns:
-        ndarray: The normalized image.
-    """
-    # cv2 inplace normalization does not accept uint8
-    assert img.dtype != np.uint8
-    mean = np.float64(mean.reshape(1, -1))
-    stdinv = 1 / np.float64(std.reshape(1, -1))
-    if to_rgb:
-        cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)  # inplace
-    cv2.subtract(img, mean, img)  # inplace
-    cv2.multiply(img, stdinv, img)  # inplace
-    return img
-
-
 @PIPELINES.register()
 class Normalize(BaseOperation):
     """Normalize images with the given mean and std value.
@@ -605,7 +579,11 @@ class Normalize(BaseOperation):
             imgs[i] = img
 
         for img in imgs:
-            imnormalize_(img, self.mean, self.std, self.to_bgr)
+            self.im_norm(img,
+                         self.mean,
+                         self.std,
+                         inplace=True,
+                         to_bgr=self.to_bgr)
 
         results['imgs'] = imgs
         results['img_norm_cfg'] = dict(mean=self.mean,
