@@ -108,7 +108,7 @@ class AverageMeter(object):
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
 
 
-def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
+def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, eta:int=None):
     batch_cost = str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = str(metric_list['reader_time'].value) + ' sec,'
 
@@ -119,11 +119,17 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
     metric_str = ' '.join([str(v) for v in metric_values])
     epoch_str = "epoch:[{:>3d}/{:<3d}]".format(epoch_id, total_epoch)
     step_str = "{:s} step:{:<4d}".format(mode, batch_id)
-
-    logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+    if eta is not None:
+        d = eta // (3600 * 24)
+        h = (eta // 3600) % 24
+        m = (eta // 60) % 60
+        eta_str = "eta: {:d}:{:02d}:{:02d}".format(d, h, m)
+    else:
+        eta_str = ''
+    logger.info("{:s} {:s} {:s} {:s} {:s} {} {:s}".format(
         coloring(epoch_str, "HEADER") if batch_id == 0 else epoch_str,
         coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-        coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips, eta_str))
 
 
 def log_epoch(metric_list, epoch, mode, ips):
