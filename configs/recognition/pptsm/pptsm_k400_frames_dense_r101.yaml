@@ -44,7 +44,7 @@ PIPELINE: #PIPELINE field
             dense_sample: True
         transform: #Mandotary, image transfrom operator
             - Scale:
-                short_size: 256
+                scale_size: 256
             - MultiScaleCrop:
                 target_size: 256
             - RandomCrop:
@@ -64,7 +64,7 @@ PIPELINE: #PIPELINE field
             valid_mode: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
             - CenterCrop:
                 target_size: 224
             - Image2Array:
@@ -82,7 +82,7 @@ PIPELINE: #PIPELINE field
             dense_sample: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
             - GroupFullResSample:
                 crop_size: 224
             - Image2Array:

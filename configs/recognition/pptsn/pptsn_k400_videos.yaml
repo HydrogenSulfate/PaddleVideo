@@ -45,15 +45,12 @@ PIPELINE: #PIPELINE field
             select_left: True
         transform: #Mandotary, image transfrom operator
             - Scale:
-                short_size: 256
+                scale_size: 256
                 fixed_ratio: False
-                do_round: True
-                backend: 'cv2'
             - MultiScaleCrop:
                 target_size: 224
                 allow_duplication: True
                 more_fix_crop: True
-                backend: 'cv2'
             - RandomFlip:
             - Image2Array:
             - Normalization:
@@ -72,13 +69,10 @@ PIPELINE: #PIPELINE field
             select_left: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
                 fixed_ratio: False
-                do_round: True
-                backend: 'cv2'
             - CenterCrop:
                 target_size: 224
-                do_round: False
             - Image2Array:
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
@@ -96,9 +90,8 @@ PIPELINE: #PIPELINE field
             linspace_sample: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
                 fixed_ratio: False
-                backend: 'cv2'
             - TenCrop:
                 target_size: 224
             - Image2Array:

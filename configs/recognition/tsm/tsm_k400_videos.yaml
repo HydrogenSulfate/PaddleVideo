@@ -63,7 +63,7 @@ PIPELINE: #PIPELINE field
             select_left: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
                 fixed_ratio: False
             - CenterCrop:
                 target_size: 224
@@ -84,7 +84,7 @@ PIPELINE: #PIPELINE field
             select_left: True
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
                 fixed_ratio: False
             - CenterCrop:
                 target_size: 224

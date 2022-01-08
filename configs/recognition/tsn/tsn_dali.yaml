@@ -43,7 +43,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
         transform:
             - Scale:
-                short_size: 256
+                scale_size: 256
             - CenterCrop:
                 target_size: 224
             - Image2Array:
