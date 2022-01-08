@@ -47,7 +47,7 @@ class FeaturePadding(BaseOperation):
         image_location = np.zeros((self.max_region_num, 5), dtype=np.float32)
 
         action_feature = np.zeros((self.max_action_num, 2048), dtype=np.float32)
-        action_target = np.zeros((self.max_region_num, ), dtype=np.int64)
+        action_target = np.zeros((self.max_action_num, ), dtype=np.int64)
 
         num_boxes = int(num_boxes)
         image_feature[:num_boxes] = image_feature_wp
@@ -88,7 +88,7 @@ class FeaturePadding(BaseOperation):
 class RandomCap(BaseOperation):
     def __init__(self, caption_path):
         """
-        Tokenize caption
+        Random Caption for NSP task
         """
         self.caption_path = caption_path
 
