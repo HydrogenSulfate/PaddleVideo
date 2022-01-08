@@ -14,13 +14,13 @@
 
 import math
 import random
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 import paddle
 
 from ..registry import PIPELINES
-from .base import (_IMSIZE, _RESULT, _ARRAY, BaseOperation)
+from .base import _ARRAY, _IMSIZE, _RESULT, BaseOperation
 
 
 @PIPELINES.register()

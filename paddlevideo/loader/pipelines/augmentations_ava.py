@@ -21,8 +21,8 @@ import numpy as np
 from PIL import Image
 
 from ..registry import PIPELINES
-from .base import (_IMSIZE, _RESULT, CV2_INTERP_CODES, PILLOW_INTERP_CODES,
-                   _IMTYPE, _BOX, BaseOperation)
+from .base import (_ARRAY, _BOX, _IMSIZE, _IMTYPE, _RESULT, CV2_INTERP_CODES,
+                   PILLOW_INTERP_CODES, BaseOperation)
 
 
 def _init_lazy_if_proper(results, lazy):
@@ -546,25 +546,23 @@ class Normalize(BaseOperation):
     keys "scale_factor" is required
 
     Args:
-        mean (Sequence[float]): Mean values of different channels.
-        std (Sequence[float]): Std values of different channels.
+        mean (_ARRAY): Mean values of different channels.
+        std (_ARRAY): Std values of different channels.
         to_bgr (bool): Whether to convert channels from RGB to BGR.
             Default: False.
         adjust_magnitude (bool): Indicate whether to adjust the flow magnitude
             on 'scale_factor' when modality is 'Flow'. Default: False.
     """
     def __init__(self,
-                 mean: Sequence[float],
-                 std: Sequence[float],
+                 mean: _ARRAY,
+                 std: _ARRAY,
                  to_bgr: bool = False,
                  adjust_magnitude: bool = False) -> None:
         if not isinstance(mean, Sequence):
-            raise TypeError(
-                f'Mean must be list, tuple or np.ndarray, but got {type(mean)}')
+            raise TypeError(f'Mean must be _ARRAY, but got {type(mean)}')
 
         if not isinstance(std, Sequence):
-            raise TypeError(
-                f'Std must be list, tuple or np.ndarray, but got {type(std)}')
+            raise TypeError(f'Std must be _ARRAY, but got {type(std)}')
 
         self.mean = np.array(mean, dtype=np.float32)
         self.std = np.array(std, dtype=np.float32)
