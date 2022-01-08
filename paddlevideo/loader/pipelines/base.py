@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Sequence
 
 import cv2
 import numpy as np
@@ -10,7 +10,7 @@ _IMSIZE = Tuple[int, int]
 _SCALE = Union[int, float, Tuple[int, int]]
 _IMTYPE = Union[np.ndarray, Image.Image, paddle.Tensor]
 _BOX = Tuple[int, int, int, int]
-_ARRAY = Union[List, np.ndarray, paddle.Tensor]
+_ARRAY = Sequence[Union[int, float]]
 _RESULT = Dict[str, Any]
 
 PILLOW_INTERP_CODES = {
@@ -224,15 +224,16 @@ class BaseOperation(object):
                 img: _IMTYPE,
                 mean: _ARRAY,
                 std: _ARRAY,
-                inplace: bool = False) -> _IMTYPE:
+                inplace: bool = False,
+                to_bgr: bool = False) -> _IMTYPE:
         """Apply normalization to input image(s)
 
         Args:
             img (_IMAGE): input image(s)
             mean (_ARRAY): mean value array to subtract
             std (_ARRAY): std value to divide
-            inplace (bool, optional): Whether use inplace op when flip(if available). Defaults to False.
-
+            inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
+            to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, and only supprt with cv2). Default to False.
         Returns:
             _IMAGE: Normalized image(s)
         """
@@ -241,18 +242,20 @@ class BaseOperation(object):
         if isinstance(img, np.ndarray):
             if img.dtype == np.uint8:
                 raise TypeError(f"img.dtype must be float, but got {img.dtype}")
+            if to_bgr:
+                cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
             if inplace:
-                mean = np.float64(mean.reshape(1, -1))  # [1, 3]
+                mean = mean.reshape(1, -1).astype('float64')  # [1, 3]
                 std_inv = 1 / np.float64(std.reshape(
                     1, -1))  # [1, 3], reciprocal of std
                 cv2.subtract(img, mean, img)  # inplace
                 cv2.multiply(img, std_inv, img)  # inplace
                 return img
             else:
-                norm_imgs = img
-                norm_imgs -= mean
-                norm_imgs /= std
-
+                norm_img = img
+                norm_img -= mean
+                norm_img /= std
+                return norm_img
         elif isinstance(img, paddle.Tensor):
             if img.ndim != 4:
                 raise ValueError(
@@ -261,6 +264,7 @@ class BaseOperation(object):
             norm_imgs = img
             norm_imgs -= mean
             norm_imgs /= std
+            return norm_imgs
         else:
             raise TypeError(
                 f"Input images must be numpy.ndarray or paddle.Tensor, but got{type(img)}"
@@ -292,3 +296,11 @@ class BaseOperation(object):
             ret += f"\n  {attr_name}={attr_value}"
         ret += "\n)"
         return ret
+
+
+op = BaseOperation()
+
+im = np.arange(2 * 2 * 3).reshape([2, 2, 3]).astype("uint8")
+print(im)
+op.im_flip(im, inplace=True)
+print(im)

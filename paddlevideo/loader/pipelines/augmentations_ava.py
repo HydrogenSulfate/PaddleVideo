@@ -21,8 +21,8 @@ import numpy as np
 from PIL import Image
 
 from ..registry import PIPELINES
-from .base import (_RESULT, CV2_INTERP_CODES, PILLOW_INTERP_CODES, _IMTYPE,
-                   BaseOperation)
+from .base import (_IMSIZE, _RESULT, CV2_INTERP_CODES, PILLOW_INTERP_CODES,
+                   _IMTYPE, _BOX, BaseOperation)
 
 
 def _init_lazy_if_proper(results, lazy):
@@ -60,13 +60,13 @@ def _init_lazy_if_proper(results, lazy):
 
 
 def imresize(
-    img,
-    size: int,
+    img: _IMTYPE,
+    size: _IMSIZE,
     return_scale: bool = False,
     interpolation: str = 'bilinear',
     out=None,
     backend: Optional[str] = None
-) -> Union[_IMTYPE, Tuple[_IMTYPE, Tuple[float, float]]]:
+) -> Union[_IMTYPE, Tuple[_IMTYPE, float, float]]:
     """Resize image to a given size.  """
     h, w = img.shape[:2]
     if backend is None:
@@ -104,10 +104,10 @@ class EntityBoxRescale(BaseOperation):
     Args:
         scale_factor (np.ndarray): The scale factor used entity_box rescaling.
     """
-    def __init__(self, scale_factor) -> None:
+    def __init__(self, scale_factor: np.ndarray) -> None:
         self.scale_factor = scale_factor
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         scale_factor = np.concatenate([self.scale_factor, self.scale_factor])
 
         proposals = results['proposals']
@@ -134,10 +134,10 @@ class EntityBoxCrop(BaseOperation):
     Args:
         crop_bbox(np.ndarray | None): The bbox used to crop the original image.
     """
-    def __init__(self, crop_bbox) -> None:
+    def __init__(self, crop_bbox: Optional[_BOX]) -> None:
         self.crop_bbox = crop_bbox
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         proposals = results['proposals']
         gt_bboxes = results['gt_bboxes']
 
@@ -178,10 +178,10 @@ class EntityBoxFlip(BaseOperation):
     Args:
         img_shape (tuple[int]): The img shape.
     """
-    def __init__(self, img_shape) -> None:
+    def __init__(self, img_shape: _IMSIZE) -> None:
         self.img_shape = img_shape
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         proposals = results['proposals']
         gt_bboxes = results['gt_bboxes']
         img_h, img_w = self.img_shape
@@ -228,10 +228,10 @@ class Resize(BaseOperation):
         lazy (bool): Determine whether to apply lazy operation. Default: False.
     """
     def __init__(self,
-                 scale,
-                 keep_ratio=True,
-                 interpolation='bilinear',
-                 lazy=False) -> None:
+                 scale: Union[float, _IMSIZE],
+                 keep_ratio: bool = True,
+                 interpolation: str = 'bilinear',
+                 lazy: bool = False) -> None:
         if isinstance(scale, float):
             if scale <= 0:
                 raise ValueError(f'Invalid scale {scale}, must be positive.')
@@ -249,7 +249,7 @@ class Resize(BaseOperation):
         self.interpolation = interpolation
         self.lazy = lazy
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         """Performs the Resize augmentation.
 
         Args:
@@ -298,7 +298,9 @@ class RandomRescale(BaseOperation):
     """Randomly resize images so that the short_edge is resized to a specific
     size in a given range. The scale ratio is unchanged after resizing.
     """
-    def __init__(self, scale_range, interpolation='bilinear') -> None:
+    def __init__(self,
+                 scale_range: Union[str, Tuple],
+                 interpolation: str = 'bilinear') -> None:
         scale_range = eval(scale_range)
         self.scale_range = scale_range
 
@@ -309,7 +311,7 @@ class RandomRescale(BaseOperation):
         self.keep_ratio = True
         self.interpolation = interpolation
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         """Performs the Resize augmentation.
 
         Args:
@@ -343,14 +345,14 @@ class Rescale(BaseOperation):
         interpolation (str): Algorithm used for interpolation:
             "nearest" | "bilinear". Default: "bilinear".
     """
-    def __init__(self, scale_range, interpolation='bilinear') -> None:
+    def __init__(self, scale_range, interpolation: str = 'bilinear') -> None:
         scale_range = eval(scale_range)
         self.scale_range = scale_range
 
         self.keep_ratio = True
         self.interpolation = interpolation
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         """Performs the Resize augmentation.
 
         Args:
@@ -377,13 +379,13 @@ class RandomCrop_v2(BaseOperation):
         size (int): The output size of the images.
         lazy (bool): Determine whether to apply lazy operation. Default: False.
     """
-    def __init__(self, size, lazy=False) -> None:
+    def __init__(self, size: int, lazy: bool = False) -> None:
         if not isinstance(size, int):
             raise TypeError(f'Size must be an int, but got {type(size)}')
         self.size = size
         self.lazy = lazy
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         """Performs the RandomCrop augmentation.
 
         Args:
@@ -457,27 +459,7 @@ class RandomCrop_v2(BaseOperation):
         return results
 
 
-def imflip_(img, direction='horizontal'):
-    """Inplace flip an image horizontally or vertically.
-
-    Args:
-        img (ndarray): Image to be flipped.
-        direction (str): The flip direction, either "horizontal" or
-            "vertical" or "diagonal".
-
-    Returns:
-        ndarray: The flipped image (inplace).
-    """
-    assert direction in ['horizontal', 'vertical', 'diagonal']
-    if direction == 'horizontal':
-        return cv2.flip(img, 1, img)
-    elif direction == 'vertical':
-        return cv2.flip(img, 0, img)
-    else:
-        return cv2.flip(img, -1, img)
-
-
-def iminvert(img):
+def iminvert(img: np.ndarray) -> np.ndarray:
     """Invert (negate) an image.
 
     Args:
@@ -510,9 +492,9 @@ class Flip(BaseOperation):
     _directions = ['horizontal', 'vertical']
 
     def __init__(self,
-                 flip_ratio=0.5,
-                 direction='horizontal',
-                 lazy=False) -> None:
+                 flip_ratio: float = 0.5,
+                 direction: str = 'horizontal',
+                 lazy: bool = False) -> None:
         if direction not in self._directions:
             raise ValueError(f'Direction {direction} is not supported. '
                              f'Currently support ones are {self._directions}')
@@ -520,7 +502,7 @@ class Flip(BaseOperation):
         self.direction = direction
         self.lazy = lazy
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         """Performs the Flip augmentation.
 
         Args:
@@ -536,7 +518,7 @@ class Flip(BaseOperation):
         if not self.lazy:
             if flip:
                 for i, img in enumerate(results['imgs']):
-                    imflip_(img, self.direction)
+                    self.im_flip(img, self.direction, inplace=True)
                 lt = len(results['imgs'])
             else:
                 results['imgs'] = list(results['imgs'])
@@ -555,7 +537,10 @@ class Flip(BaseOperation):
         return results
 
 
-def imnormalize_(img, mean, std, to_rgb=True):
+def imnormalize_(img: np.ndarray,
+                 mean: np.ndarray,
+                 std: np.ndarray,
+                 to_rgb: bool = True) -> np.ndarray:
     """Inplace normalize an image with mean and std.
 
     Args:
@@ -594,7 +579,11 @@ class Normalize(BaseOperation):
         adjust_magnitude (bool): Indicate whether to adjust the flow magnitude
             on 'scale_factor' when modality is 'Flow'. Default: False.
     """
-    def __init__(self, mean, std, to_bgr=False, adjust_magnitude=False) -> None:
+    def __init__(self,
+                 mean: Sequence[float],
+                 std: Sequence[float],
+                 to_bgr: bool = False,
+                 adjust_magnitude: bool = False) -> None:
         if not isinstance(mean, Sequence):
             raise TypeError(
                 f'Mean must be list, tuple or np.ndarray, but got {type(mean)}')
@@ -608,7 +597,7 @@ class Normalize(BaseOperation):
         self.to_bgr = to_bgr
         self.adjust_magnitude = adjust_magnitude
 
-    def __call__(self, results) -> _RESULT:
+    def __call__(self, results: _RESULT) -> _RESULT:
         n = len(results['imgs'])
         h, w, c = results['imgs'][0].shape
         imgs = np.empty((n, h, w, c), dtype=np.float32)

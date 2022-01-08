@@ -20,7 +20,7 @@ import numpy as np
 import paddle
 
 from ..registry import PIPELINES
-from .base import (_IMSIZE, _RESULT, BaseOperation)
+from .base import (_IMSIZE, _RESULT, _ARRAY, BaseOperation)
 
 
 @PIPELINES.register()
@@ -193,7 +193,7 @@ class MultiScaleCrop(BaseOperation):
     """
     def __init__(self,
                  target_size: int,
-                 scales: List[int] = None,
+                 scales: _ARRAY = None,
                  max_distort: int = 1,
                  fix_crop: bool = True,
                  allow_duplication: bool = False,
@@ -378,9 +378,9 @@ class Normalization(BaseOperation):
 
     """
     def __init__(self,
-                 mean: list,
-                 std: list,
-                 tensor_shape: list = [3, 1, 1],
+                 mean: _ARRAY,
+                 std: _ARRAY,
+                 tensor_shape: _ARRAY = [3, 1, 1],
                  to_tensor: bool = False):
         if not isinstance(mean, list):
             raise TypeError(f'mean must be list, but got {type(mean)}')
@@ -418,7 +418,7 @@ class JitterScale(BaseOperation):
     def __init__(self,
                  min_size: int,
                  max_size: int,
-                 short_cycle_factors: List[float] = [0.5, 0.7071],
+                 short_cycle_factors: _ARRAY = [0.5, 0.7071],
                  default_min_size: int = 256,
                  interpolation: str = 'bilinear'):
         self.min_size = min_size
@@ -487,7 +487,7 @@ class MultiCrop(BaseOperation):
     def __init__(self,
                  target_size: int,
                  default_crop_size: int = 224,
-                 short_cycle_factors: List[float] = [0.5, 0.7071],
+                 short_cycle_factors: _ARRAY = [0.5, 0.7071],
                  test_mode: bool = False):
         self.orig_target_size = self.target_size = target_size
         self.short_cycle_factors = short_cycle_factors
@@ -752,7 +752,7 @@ class GroupResize(BaseOperation):
                  height: int,
                  width: int,
                  scale: int,
-                 K: List[List],
+                 K: _ARRAY,
                  mode: str = 'train',
                  interpolation: str = 'lanczos'):
         self.height = height
