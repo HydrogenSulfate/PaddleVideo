@@ -12,21 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .actbert import BertForMultiModalPreTraining
+from .adds import ADDS_DepthNet
+from .agcn import AGCN
+from .bmn import BMN
 from .resnet import ResNet
-from .resnet_tsm import ResNetTSM
 from .resnet_slowfast import ResNetSlowFast
+from .resnet_tsm import ResNetTSM
 from .resnet_tweaks_tsm import ResNetTweaksTSM
 from .resnet_tweaks_tsn import ResNetTweaksTSN
-from .bmn import BMN
-from .vit import VisionTransformer
 from .stgcn import STGCN
-from .agcn import AGCN
 from .transnetv2 import TransNetV2
-from .actbert import BertForMultiModalPreTraining
+from .vit import VisionTransformer
 from .vit_tweaks import VisionTransformer_tweaks
+from .resnet_tsn_MRI import ResNetTSN_MRI
+from .resnet_tsm_MRI import ResNetTSM_MRI
+from .resnet_slowfast_MRI import ResNetSlowFast_MRI
+from .cfbi import CFBI
 
 __all__ = [
     'ResNet', 'ResNetTSM', 'ResNetTweaksTSM', 'ResNetSlowFast', 'BMN',
     'ResNetTweaksTSN', 'VisionTransformer', 'STGCN', 'AGCN', 'TransNetV2',
-    'BertForMultiModalPreTraining', 'VisionTransformer_tweaks'
+    'ADDS_DepthNet', 'VisionTransformer_tweaks', 'BertForMultiModalPreTraining',
+    'ResNetTSN_MRI', 'ResNetTSM_MRI', 'ResNetSlowFast_MRI', 'CFBI'
 ]
