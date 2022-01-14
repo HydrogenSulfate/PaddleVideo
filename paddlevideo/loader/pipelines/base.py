@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import cv2
@@ -258,6 +259,9 @@ class BaseOperation(object):
                 norm_img /= std
                 return norm_img
         elif isinstance(img, paddle.Tensor):
+            if inplace is True:
+                raise ValueError(
+                    f"inplace=True only when type of imgs is np.ndarray")
             if img.ndim != 4:
                 raise ValueError(
                     f"Tensor must be 4 dim when resize, but got {img.ndim}")

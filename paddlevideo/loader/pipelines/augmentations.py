@@ -37,20 +37,21 @@ class Scale(BaseOperation):
     def __init__(self,
                  scale_size: int,
                  keep_ratio: bool = True,
-                 fixed_ratio: Union[int, float, None] = None,
+                 fixed_ratio: Union[str, bool] = False,
                  interpolation: str = 'bilinear'):
         if keep_ratio:
             scale_size: Tuple[float,
                               int] = (np.inf, scale_size)  # short side scale
-            if fixed_ratio is not None:
+            if fixed_ratio is not False:
                 raise ValueError(
                     f"fixed_ratio must be None when keep_ratio is True")
         else:
-            if fixed_ratio is None:
+            if fixed_ratio is False:
                 scale_size: Tuple[int,
                                   int] = (scale_size, scale_size
                                           )  # scale both side to scale_size
             else:
+                fixed_ratio = eval(fixed_ratio)
                 if not isinstance(fixed_ratio, (int, float)):
                     raise ValueError(
                         f"fixed ratio must be int or float, but got {type(fixed_ratio)}"
@@ -383,7 +384,8 @@ class Normalization(BaseOperation):
                  mean: _ARRAY,
                  std: _ARRAY,
                  tensor_shape: Sequence[int] = [3, 1, 1],
-                 to_tensor: bool = False):
+                 to_tensor: bool = False,
+                 inplace: bool = False):
         if not isinstance(mean, list):
             raise TypeError(f'mean must be list, but got {type(mean)}')
         if not isinstance(std, list):
@@ -391,6 +393,7 @@ class Normalization(BaseOperation):
         self.mean = np.array(mean).reshape(tensor_shape).astype(np.float32)
         self.std = np.array(std).reshape(tensor_shape).astype(np.float32)
         self.to_tensor = to_tensor
+        self.inplace = inplace
 
     def __call__(self, results: _RESULT) -> _RESULT:
         """Apply normalization operations on images
@@ -402,7 +405,7 @@ class Normalization(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        imgs = self.im_norm(imgs, self.mean, self.std)
+        imgs = self.im_norm(imgs, self.mean, self.std, self.inplace)
         if self.to_tensor:
             imgs = paddle.to_tensor(imgs, dtype=paddle.float32, place='cpu')
         results['imgs'] = imgs
