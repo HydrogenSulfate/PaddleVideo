@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from PIL import Image
-import copy
 import cv2
+import numpy as np
+
 from ..registry import PIPELINES
 
 

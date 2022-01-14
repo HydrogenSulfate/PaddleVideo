@@ -15,12 +15,13 @@
 import copy
 import json
 import random
+from typing import List, Sequence, Tuple
 
 import numpy as np
 from paddlenlp.transformers import BertTokenizer
 
 from ..registry import PIPELINES
-from .base import BaseOperation
+from .base import _RESULT, BaseOperation
 
 
 @PIPELINES.register()
@@ -28,19 +29,19 @@ class FeaturePadding(BaseOperation):
     """
     Padding feature to target shape.
     """
-    def __init__(self, max_region_num=36, max_action_num=5):
+    def __init__(self, max_region_num: int = 36, max_action_num: int = 5):
         self.max_region_num = max_region_num
         self.max_action_num = max_action_num
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         """
         Padding feature.
         """
         pack_feature = results['feature']
         tokenizer = results['tokenizer']
         image_feature_wp, image_target_wp, image_location_wp, \
-                num_boxes,  image_h, image_w, image_id, caption, \
-                action_feature_wp, action_target_wp, num_actions = pack_feature
+            num_boxes,  image_h, image_w, image_id, caption, \
+            action_feature_wp, action_target_wp, num_actions = pack_feature
 
         image_feature = np.zeros((self.max_region_num, 2048), dtype=np.float32)
         image_target = np.zeros((self.max_region_num, 1601), dtype=np.float32)
@@ -86,26 +87,27 @@ class FeaturePadding(BaseOperation):
 
 @PIPELINES.register()
 class RandomCap(BaseOperation):
-    def __init__(self, caption_path):
+    def __init__(self, caption_path: str):
         """
         Random Caption for NSP task
         """
         self.caption_path = caption_path
 
-    def select_caption(self, caption):
+    def select_caption(self, caption: str) -> str:
         captions = caption.split('!')
         rind = random.randint(0, len(captions) - 1)
         caption = captions[rind]
         return caption
 
-    def get_random_caption(self, all_captions):
+    def get_random_caption(self, all_captions: Sequence[str]) -> str:
         num_caps = len(all_captions)
         rand_doc_idx = random.randint(0, num_caps - 1)
         caption = all_captions[rand_doc_idx]
         caption = self.select_caption(caption)
         return caption
 
-    def random_cap(self, caption, all_captions):
+    def random_cap(self, caption: str,
+                   all_captions: Sequence[str]) -> Tuple[str, int]:
         if random.random() > 0.5:
             label = 0
         else:
@@ -113,7 +115,7 @@ class RandomCap(BaseOperation):
             label = 1
         return caption, label
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         caption = results['caption']
         all_captions = list(json.load(open(self.caption_path, 'r')))
         caption = self.select_caption(caption)
@@ -131,7 +133,7 @@ class Tokenize(BaseOperation):
         """
         pass
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         caption = results['caption']
         tokenizer = results['tokenizer']
         tokens_caption = tokenizer.tokenize(caption)
@@ -142,14 +144,16 @@ class Tokenize(BaseOperation):
 @PIPELINES.register()
 class RandomMask(BaseOperation):
     def __init__(self,
-                 max_seq_length=36,
-                 max_action_length=5,
-                 max_region_length=36):
+                 max_seq_length: int = 36,
+                 max_action_length: int = 5,
+                 max_region_length: int = 36):
         self.max_seq_length = max_seq_length
         self.max_action_length = max_action_length
         self.max_region_length = max_region_length
 
-    def get_image_global_feature(self, image_feat, image_loc, image_mask):
+    def get_image_global_feature(self, image_feat: np.ndarray, image_loc: np.ndarray, image_mask: np.ndarray) \
+            -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
         g_image_feat = np.sum(image_feat, axis=0) / np.sum(
             image_mask, axis=0, keepdims=True)
         image_feat = np.concatenate(
@@ -165,7 +169,7 @@ class RandomMask(BaseOperation):
 
         return image_feat, image_loc, image_mask
 
-    def _truncate_seq_pair(self, tokens_b, max_length):
+    def _truncate_seq_pair(self, tokens_b: Sequence, max_length: int) -> None:
         """Truncates a sequence pair in place to the maximum length.
         This is a simple heuristic which will always truncate the longer sequence
         one token at a time. This makes more sense than truncating an equal percent
@@ -178,7 +182,8 @@ class RandomMask(BaseOperation):
                 break
             tokens_b.pop()
 
-    def random_word(self, tokens, tokenizer):
+    def random_word(self, tokens: List[str],
+                    tokenizer: BertTokenizer) -> Tuple[List[str], List]:
         """
         Masking some random tokens for Language Model task with probabilities as in the original BERT paper.
         Args:
@@ -225,7 +230,8 @@ class RandomMask(BaseOperation):
 
         return tokens, output_label
 
-    def random_region(self, image_feat, image_loc, num_boxes):
+    def random_region(self, image_feat: np.ndarray, image_loc: np.ndarray,
+                      num_boxes: int) -> Tuple[np.ndarray, np.ndarray, List]:
         output_label = []
 
         for i in range(num_boxes):
@@ -269,7 +275,7 @@ class RandomMask(BaseOperation):
 
         return action_feat, output_label
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         caption = results['caption']
         tokenizer = results['tokenizer']
         image_feat = results['image_feat']

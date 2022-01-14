@@ -59,7 +59,7 @@ class Scale(BaseOperation):
         self.keep_ratio = keep_ratio
         self.fixed_ratio = fixed_ratio
         self.interpolation = interpolation
-        if self.fixed_ratio and self.keep_ratio:
+        if self.fixed_ratio is not None and self.keep_ratio:
             raise ValueError(
                 f"keep_ratio can't be true when fixed_ratio is provided")
 
@@ -627,20 +627,20 @@ class GroupFullResSample(BaseOperation):
 
         oversample_group = []
         for x1, y1 in offsets:
-            normal_group = []
-            flip_group = []
+            crop_group = []
+            flip_crop_group = []
             x2 = x1 + crop_w
             y2 = y1 + crop_h
             for i, img in enumerate(img_group):
                 crop_img = self.im_crop(img, (x1, y1, x2, y2))
-                normal_group.append(crop_img)
+                crop_group.append(crop_img)
                 if self.flip:
                     flip_crop_img = self.im_flip(crop_img)
-                    flip_group.append(flip_crop_img)
+                    flip_crop_group.append(flip_crop_img)
 
-            oversample_group.extend(normal_group)
+            oversample_group.extend(crop_group)
             if self.flip:
-                oversample_group.extend(flip_group)
+                oversample_group.extend(flip_crop_group)
 
         results['imgs'] = oversample_group
         return results
