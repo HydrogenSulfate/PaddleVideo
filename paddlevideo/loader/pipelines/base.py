@@ -275,7 +275,7 @@ class BaseOperation(object):
                 f"Input images must be numpy.ndarray or paddle.Tensor, but got{type(img)}"
             )
 
-    def get_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
+    def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
         if isinstance(img, paddle.Tensor):
             h, w = img.shape[-2:]
         elif isinstance(img, list):

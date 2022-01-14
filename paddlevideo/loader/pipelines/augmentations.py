@@ -74,7 +74,7 @@ class Scale(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
 
         if self.fixed_ratio is not None:
             if min(w, h) == self.scale_size:
@@ -121,7 +121,7 @@ class RandomCrop(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
 
         th, tw = self.target_size
         if not (w >= self.target_size[1] and h >= self.target_size[0]):
@@ -190,7 +190,7 @@ class RandomResizedCrop(RandomCrop):
 
     def __call__(self, results: _RESULT) -> _RESULT:
         imgs = results['imgs']
-        img_w, img_h = self.get_size(imgs)
+        img_w, img_h = self.get_im_size(imgs)
 
         x1, y1, x2, y2 = self.get_crop_bbox((img_h, img_w), self.area_range,
                                             self.aspect_ratio_range)
@@ -223,7 +223,7 @@ class CenterCrop(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
         th, tw = self.target_size
         if not (w >= self.target_size[1] and h >= self.target_size[0]):
             raise ValueError(f"The clipping edge({tw})x({th}) should\
@@ -280,7 +280,7 @@ class MultiScaleCrop(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
 
         # get random crop offset
         def _sample_crop_size(im_size: _IMSIZE):
@@ -518,7 +518,7 @@ class JitterScale(BaseOperation):
         assert (len(imgs) >= 1), \
             "len(imgs):{} should be larger than 1".format(len(imgs))
 
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
         if (w <= h and w == random_short_size) or (h <= w
                                                    and h == random_short_size):
             return results
@@ -732,7 +732,7 @@ class TenCrop(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
         tw, th = self.target_size
         w_step = (w - tw) // 4
         h_step = (h - th) // 4
@@ -777,7 +777,7 @@ class UniformCrop(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        w, h = self.get_size(imgs)
+        w, h = self.get_im_size(imgs)
         tw, th = self.target_size
         if h > w:
             offsets = [(0, 0), (0, int(math.ceil((h - th) / 2))), (0, h - th)]
