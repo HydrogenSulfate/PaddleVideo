@@ -23,13 +23,13 @@ from .compose import Compose
 from .decode import FeatureDecoder, FrameDecoder, VideoDecoder
 from .decode_image import ImageDecoder
 from .decode_sampler import DecodeSampler
+from .decode_sampler_MRI import SFMRI_DecodeSampler
 from .mix import Cutmix, Mixup, VideoMix
 from .multimodal import FeaturePadding, RandomCap, RandomMask, Tokenize
 from .sample import Sampler
 from .sample_ava import *
 from .segmentation import MultiNorm, MultiRestrictSize
 from .skeleton_pipeline import AutoPadding, Iden, SkeletonNorm
-from .decode_sampler_MRI import SFMRI_DecodeSampler
 
 __all__ = [
     'ImageDecoder', 'RandomMask', 'UniformCrop', 'SkeletonNorm', 'Tokenize',

@@ -20,7 +20,7 @@ import numpy as np
 import paddle
 
 from ..registry import PIPELINES
-from .base import _ARRAY, _IMSIZE, _RESULT, BaseOperation
+from .base import _ARRAY, _BOX, _IMSIZE, _RESULT, BaseOperation
 
 
 @PIPELINES.register()
@@ -138,6 +138,68 @@ class RandomCrop(BaseOperation):
         else:
             crop_images = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
         results['imgs'] = crop_images
+        return results
+
+
+@PIPELINES.register()
+class RandomResizedCrop(RandomCrop):
+    def __init__(self,
+                 target_size: int = 224,
+                 area_range: Tuple[float, float] = (0.08, 1.0),
+                 aspect_ratio_range: Tuple[float, float] = (3 / 4, 4 / 3)):
+
+        self.area_range = area_range
+        self.aspect_ratio_range = aspect_ratio_range
+        self.target_size = target_size
+
+    @staticmethod
+    def get_crop_bbox(img_shape: _IMSIZE,
+                      area_range: Tuple[float, float],
+                      aspect_ratio_range: Tuple[float, float],
+                      max_attempts: int = 10) -> _BOX:
+
+        assert 0 < area_range[0] <= area_range[1] <= 1
+        assert 0 < aspect_ratio_range[0] <= aspect_ratio_range[1]
+
+        img_h, img_w = img_shape
+        area = img_h * img_w
+
+        min_ar, max_ar = aspect_ratio_range
+        aspect_ratios = np.exp(
+            np.random.uniform(np.log(min_ar), np.log(max_ar),
+                              size=max_attempts))
+        target_areas = np.random.uniform(*area_range, size=max_attempts) * area
+        candidate_crop_w = np.round(np.sqrt(target_areas *
+                                            aspect_ratios)).astype(np.int32)
+        candidate_crop_h = np.round(np.sqrt(target_areas /
+                                            aspect_ratios)).astype(np.int32)
+
+        for i in range(max_attempts):
+            crop_w = candidate_crop_w[i]
+            crop_h = candidate_crop_h[i]
+            if crop_h <= img_h and crop_w <= img_w:
+                x_offset = random.randint(0, img_w - crop_w)
+                y_offset = random.randint(0, img_h - crop_h)
+                return x_offset, y_offset, x_offset + crop_w, y_offset + crop_h
+
+        # Fallback
+        crop_size = min(img_h, img_w)
+        x_offset = (img_w - crop_size) // 2
+        y_offset = (img_h - crop_size) // 2
+        return x_offset, y_offset, x_offset + crop_size, y_offset + crop_size
+
+    def __call__(self, results: _RESULT) -> _RESULT:
+        imgs = results['imgs']
+        img_w, img_h = self.get_size(imgs)
+
+        x1, y1, x2, y2 = self.get_crop_bbox((img_h, img_w), self.area_range,
+                                            self.aspect_ratio_range)
+
+        if isinstance(imgs, paddle.Tensor):
+            imgs = self.im_crop(imgs, (x1, y1, x2, y2))
+        else:
+            imgs = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
+        results['imgs'] = imgs
         return results
 
 
