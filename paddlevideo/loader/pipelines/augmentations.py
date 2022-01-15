@@ -143,14 +143,18 @@ class RandomCrop(BaseOperation):
 
 @PIPELINES.register()
 class RandomResizedCrop(RandomCrop):
+    """A crop of random size (default: of 0.08 to 1.0) of the original size and a random
+       aspect ratio (default: of 3/4 to 4/3) of the original aspect ratio is made.
+
+    Args:
+        area_range (Tuple[float, float], optional): [description]. Defaults to (0.08, 1.0).
+        aspect_ratio_range (Tuple[float, float], optional): [description]. Defaults to (3 / 4, 4 / 3).
+    """
     def __init__(self,
-                 target_size: int = 224,
                  area_range: Tuple[float, float] = (0.08, 1.0),
                  aspect_ratio_range: Tuple[float, float] = (3 / 4, 4 / 3)):
-
         self.area_range = area_range
         self.aspect_ratio_range = aspect_ratio_range
-        self.target_size = target_size
 
     @staticmethod
     def get_crop_bbox(img_shape: _IMSIZE,
