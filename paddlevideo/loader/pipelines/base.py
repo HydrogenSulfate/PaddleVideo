@@ -225,7 +225,7 @@ class BaseOperation(object):
                 mean: np.ndarray,
                 std: np.ndarray,
                 inplace: bool = False,
-                to_bgr: bool = False) -> _IMTYPE:
+                to_bgr: bool = False) -> Union[np.ndarray, paddle.Tensor]:
         """Apply normalization to input image(s)
 
         Args:

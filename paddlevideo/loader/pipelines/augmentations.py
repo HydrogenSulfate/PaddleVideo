@@ -15,8 +15,10 @@
 import math
 import random
 from typing import Any, Dict, Sequence, Tuple, Union
+from matplotlib.pyplot import axis
 
 import numpy as np
+from numpy import place
 import paddle
 
 from ..registry import PIPELINES
@@ -54,7 +56,7 @@ class Scale(BaseOperation):
                 fixed_ratio = eval(fixed_ratio)
                 if not isinstance(fixed_ratio, (int, float)):
                     raise ValueError(
-                        f"fixed ratio must be int or float, but got {type(fixed_ratio)}"
+                        f"fixed ratio must be int or float or False, but got {type(fixed_ratio)}"
                     )
         self.scale_size = scale_size
         self.keep_ratio = keep_ratio
@@ -471,10 +473,24 @@ class Normalization(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        imgs = self.im_norm(imgs, self.mean, self.std, self.inplace)
+        if isinstance(imgs, paddle.Tensor):
+            norm_imgs = self.im_norm(imgs, self.mean, self.std, self.inplace)
+        else:
+            norm_imgs = [
+                self.im_norm(img, self.mean, self.std, self.inplace)
+                for img in imgs
+            ]
+
         if self.to_tensor:
-            imgs = paddle.to_tensor(imgs, dtype=paddle.float32, place='cpu')
-        results['imgs'] = imgs
+            if not isinstance(imgs, paddle.Tensor):
+                norm_imgs = [
+                    self.im_norm(img, self.mean, self.std, self.inplace)
+                    for img in imgs
+                ]
+                norm_imgs = np.stack(norm_imgs, axis=0)
+                norm_imgs = paddle.to_tensor(norm_imgs, place='cpu')
+
+        results['imgs'] = norm_imgs
         return results
 
 
