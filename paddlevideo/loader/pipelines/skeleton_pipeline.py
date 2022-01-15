@@ -12,27 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import numpy as np
 import random
+
+import numpy as np
+
 from ..registry import PIPELINES
+from .base import _RESULT, BaseOperation
 """pipeline ops for Activity Net.
 """
 
 
 @PIPELINES.register()
-class AutoPadding(object):
+class AutoPadding(BaseOperation):
     """
     Sample or Padding frame skeleton feature.
     Args:
         window_size: int, temporal size of skeleton feature.
         random_pad: bool, whether do random padding when frame length < window size. Default: False.
     """
-    def __init__(self, window_size, random_pad=False):
+    def __init__(self, window_size: int, random_pad: bool = False):
         self.window_size = window_size
         self.random_pad = random_pad
 
-    def get_frame_num(self, data):
+    def get_frame_num(self, data: np.ndarray) -> int:
         C, T, V, M = data.shape
         for i in range(T - 1, -1, -1):
             tmp = np.sum(data[:, i, :, :])
@@ -41,7 +43,7 @@ class AutoPadding(object):
                 break
         return T
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         data = results['data']
 
         C, T, V, M = data.shape
@@ -66,17 +68,17 @@ class AutoPadding(object):
 
 
 @PIPELINES.register()
-class SkeletonNorm(object):
+class SkeletonNorm(BaseOperation):
     """
     Normalize skeleton feature.
     Args:
         aixs: dimensions of vertex coordinate. 2 for (x,y), 3 for (x,y,z). Default: 2.
     """
-    def __init__(self, axis=2, squeeze=False):
+    def __init__(self, axis: int = 2, squeeze: bool = False):
         self.axis = axis
         self.squeeze = squeeze
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         data = results['data']
 
         # Centralization
@@ -94,14 +96,14 @@ class SkeletonNorm(object):
 
 
 @PIPELINES.register()
-class Iden(object):
+class Iden(BaseOperation):
     """
     Wrapper Pipeline
     """
-    def __init__(self, label_expand=True):
+    def __init__(self, label_expand: bool = True):
         self.label_expand = label_expand
 
-    def __call__(self, results):
+    def __call__(self, results: _RESULT) -> _RESULT:
         data = results['data']
         results['data'] = data.astype('float32')
 

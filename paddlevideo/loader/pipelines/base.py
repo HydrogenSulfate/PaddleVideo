@@ -37,7 +37,7 @@ TENSOR_INTERP_CODES = {
     "area": "area",
 }
 
-PILLOW_FLIP_CODE = {
+PILLOW_FLIP_CODES = {
     "horizontal": Image.FLIP_LEFT_RIGHT,
     "vertical": Image.FLIP_TOP_BOTTOM
 }
@@ -182,7 +182,7 @@ class BaseOperation(object):
             else:
                 return cv2.flip(src=img, flipCode=CV2_FLIP_CODES[direction])
         elif isinstance(img, Image.Image):
-            return img.transpose(PILLOW_FLIP_CODE[direction])
+            return img.transpose(PILLOW_FLIP_CODES[direction])
         elif isinstance(img, paddle.Tensor):
             if img.ndim != 4:
                 raise ValueError(
@@ -300,11 +300,3 @@ class BaseOperation(object):
             ret += f"\n  {attr_name}={attr_value}"
         ret += "\n)"
         return ret
-
-
-op = BaseOperation()
-
-im = np.arange(2 * 2 * 3).reshape([2, 2, 3]).astype("uint8")
-print(im)
-op.im_flip(im, inplace=True)
-print(im)

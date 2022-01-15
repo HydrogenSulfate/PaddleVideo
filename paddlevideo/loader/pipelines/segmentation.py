@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, List
+
 import cv2
 import numpy as np
 
 from ..registry import PIPELINES
+from .base import _RESULT, BaseOperation
 
 
 @PIPELINES.register()
-class MultiRestrictSize(object):
+class MultiRestrictSize(BaseOperation):
     def __init__(self,
-                 min_size=None,
-                 max_size=800,
-                 flip=False,
-                 multi_scale=[1.3]):
+                 min_size: int = None,
+                 max_size: int = 800,
+                 flip: bool = False,
+                 multi_scale: List[float] = [1.3]):
         self.min_size = min_size
         self.max_size = max_size
         self.multi_scale = multi_scale
         self.flip = flip
         assert ((min_size is None)) or ((max_size is None))
 
-    def __call__(self, sample):
+    def __call__(self, sample: Dict) -> List[Dict]:
         samples = []
         image = sample['current_img']
         h, w = image.shape[:2]
@@ -105,8 +108,8 @@ class MultiRestrictSize(object):
 
 
 @PIPELINES.register()
-class MultiNorm(object):
-    def __call__(self, samples):
+class MultiNorm(BaseOperation):
+    def __call__(self, samples: List[Dict]) -> List[Dict]:
         for idx in range(len(samples)):
             sample = samples[idx]
             for elem in sample.keys():
