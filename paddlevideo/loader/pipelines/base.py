@@ -114,7 +114,7 @@ class BaseOperation(object):
         new_size = self._calc_length((w, h), scale_factor)
 
         if return_scale:
-            return new_size, scale_factor
+            return (new_size, scale_factor)
         else:
             return new_size
 
@@ -290,7 +290,7 @@ class BaseOperation(object):
             raise TypeError(
                 f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}"
             )
-        return w, h
+        return (w, h)
 
     def __repr__(self) -> str:
         ret = self.__class__.__name__
