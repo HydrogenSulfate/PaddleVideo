@@ -221,11 +221,11 @@ class BaseOperation(object):
                     paddle.Tensor, but got{type(img)}")
 
     def im_norm(self,
-                img: _IMTYPE,
+                img: np.ndarray,
                 mean: np.ndarray,
                 std: np.ndarray,
                 inplace: bool = False,
-                to_bgr: bool = False) -> Union[np.ndarray, paddle.Tensor]:
+                to_bgr: bool = False) -> np.ndarray:
         """Apply normalization to input image(s)
 
         Args:
@@ -257,22 +257,21 @@ class BaseOperation(object):
                 norm_img -= mean
                 norm_img /= std
                 return norm_img
-        elif isinstance(img, paddle.Tensor):
-            if inplace is True:
-                raise ValueError(
-                    f"inplace=True only when type of imgs is np.ndarray")
-            if img.ndim != 4:
-                raise ValueError(
-                    f"Tensor must be 4 dim when resize, but got {img.ndim}")
-            # TODO: Only support '**HW' format currently!
-            norm_imgs = img
-            norm_imgs -= mean
-            norm_imgs /= std
-            return norm_imgs
+        # elif isinstance(img, paddle.Tensor):
+        #     if inplace is True:
+        #         raise ValueError(
+        #             f"inplace=True only when type of imgs is np.ndarray")
+        #     if img.ndim != 4:
+        #         raise ValueError(
+        #             f"Tensor must be 4 dim when resize, but got {img.ndim}")
+        #     # TODO: Only support '**HW' format currently!
+        #     norm_imgs = img
+        #     norm_imgs -= mean
+        #     norm_imgs /= std
+        #     return norm_imgs
         else:
             raise TypeError(
-                f"Input images must be numpy.ndarray or paddle.Tensor, but got{type(img)}"
-            )
+                f"Input images must be numpy.ndarray, but got{type(img)}")
 
     def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
         if isinstance(img, paddle.Tensor):

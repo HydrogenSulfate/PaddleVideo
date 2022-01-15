@@ -14,12 +14,12 @@
 
 import math
 import random
-from typing import Any, Dict, Sequence, Tuple, Union
-from matplotlib.pyplot import axis
+from typing import Any, Dict, Sequence, Tuple, Type, Union
 
 import numpy as np
-from numpy import place
 import paddle
+from matplotlib.pyplot import axis
+from numpy import place
 
 from ..registry import PIPELINES
 from .base import _ARRAY, _BOX, _IMSIZE, _RESULT, BaseOperation
@@ -444,13 +444,15 @@ class Normalization(BaseOperation):
     Args:
         mean (list): mean values of different channels.
         std (list): std values of different channels.
-        tensor_shape (list, optional): size of mean. Defaults to [3, 1, 1].
+        scale_factor (Union[int, float, None], optional): Whether scale pixel values by a factor before normalization. Defaults to 255.
+        tensor_shape (Sequence[int], optional): size of mean. Defaults to [3, 1, 1].
         to_tensor (bool, optional): Whether convert normalization result to tensor. Defaults to False.
-
+        inplace (bool, optional): Whether do normalizations inplace(if available) . Defaults to False.
     """
     def __init__(self,
                  mean: _ARRAY,
                  std: _ARRAY,
+                 scale_factor: Union[int, float] = 255,
                  tensor_shape: Sequence[int] = [3, 1, 1],
                  to_tensor: bool = False,
                  inplace: bool = False):
@@ -458,8 +460,13 @@ class Normalization(BaseOperation):
             raise TypeError(f'mean must be list, but got {type(mean)}')
         if not isinstance(std, list):
             raise TypeError(f'std must be list, but got {type(std)}')
+        if not isinstance(scale_factor, (int, float)):
+            raise TypeError(
+                f'scale factor must be int or float or None, but got {type(scale_factor)}'
+            )
         self.mean = np.array(mean).reshape(tensor_shape).astype(np.float32)
         self.std = np.array(std).reshape(tensor_shape).astype(np.float32)
+        self.scale_factor = scale_factor
         self.to_tensor = to_tensor
         self.inplace = inplace
 
@@ -473,22 +480,15 @@ class Normalization(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        if isinstance(imgs, paddle.Tensor):
-            norm_imgs = self.im_norm(imgs, self.mean, self.std, self.inplace)
-        else:
-            norm_imgs = [
-                self.im_norm(img, self.mean, self.std, self.inplace)
-                for img in imgs
-            ]
+        if self.scale_factor != 1:
+            norm_imgs = [img / self.scale_factor for img in imgs]
 
+        norm_imgs = [
+            self.im_norm(img, self.mean, self.std, self.inplace) for img in imgs
+        ]
         if self.to_tensor:
-            if not isinstance(imgs, paddle.Tensor):
-                norm_imgs = [
-                    self.im_norm(img, self.mean, self.std, self.inplace)
-                    for img in imgs
-                ]
-                norm_imgs = np.stack(norm_imgs, axis=0)
-                norm_imgs = paddle.to_tensor(norm_imgs, place='cpu')
+            norm_imgs = np.stack(norm_imgs, axis=0)
+            norm_imgs = paddle.to_tensor(norm_imgs)
 
         results['imgs'] = norm_imgs
         return results
