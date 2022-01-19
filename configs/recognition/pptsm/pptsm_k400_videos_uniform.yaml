@@ -2,7 +2,7 @@ MODEL: #MODEL field
     framework: "Recognizer2D" #Mandatory, indicate the type of network, associate to the 'paddlevideo/modeling/framework/' .
     backbone: #Mandatory, indicate the type of backbone, associate to the 'paddlevideo/modeling/backbones/' .
         name: "ResNetTweaksTSM" #Mandatory, The name of backbone.
-        pretrained: "data/ResNet50_vd_ssld_v2_pretrained.pdparams" #Optional, pretrained model path.
+        # pretrained: "data/ResNet50_vd_ssld_v2_pretrained.pdparams" #Optional, pretrained model path.
         depth: 50 #Optional, the depth of backbone architecture.
     head:
         name: "ppTSMHead" #Mandatory, indicate the type of head, associate to the 'paddlevideo/modeling/heads'
@@ -19,15 +19,15 @@ DATASET: #DATASET field
     train:
         format: "VideoDataset" #Mandatory, indicate the type of dataset, associate to the 'paddlevidel/loader/dateset'
         data_prefix: "data/k400/videos" #Mandatory, train data root path
-        file_path: "data/k400/train.list" #Mandatory, train data index file path
+        file_path: "data/k400/train_small_videos.list" #Mandatory, train data index file path
     valid:
         format: "VideoDataset" #Mandatory, indicate the type of dataset, associate to the 'paddlevidel/loader/dateset'
         data_prefix: "data/k400/videos" #Mandatory, train data root path
-        file_path: "data/k400/val.list" #Mandatory, valid data index file path
+        file_path: "data/k400/train_small_videos.list" #Mandatory, valid data index file path
     test:
         format: "VideoDataset" #Mandatory, indicate the type of dataset, associate to the 'paddlevidel/loader/dateset'
         data_prefix: "data/k400/videos" #Mandatory, train data root path
-        file_path: "data/k400/val.list" #Mandatory, valid data index file path
+        file_path: "data/k400/train_small_videos.list" #Mandatory, valid data index file path
 
 PIPELINE: #PIPELINE field
     train: #Mandotary, indicate the pipeline to deal with the training data, associate to the 'paddlevideo/loader/pipelines/'
@@ -42,6 +42,7 @@ PIPELINE: #PIPELINE field
         transform: #Mandotary, image transfrom operator
             - Scale:
                 scale_size: 256
+                keep_ratio: False
                 fixed_ratio: 4/3
             - MultiScaleCrop:
                 target_size: 256
@@ -64,6 +65,7 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
+                keep_ratio: False
                 fixed_ratio: 4/3
             - CenterCrop:
                 target_size: 224
@@ -83,6 +85,7 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
+                keep_ratio: False
                 fixed_ratio: 4/3
             - CenterCrop:
                 target_size: 224

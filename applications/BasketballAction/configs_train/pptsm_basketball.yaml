@@ -2,7 +2,7 @@ MODEL:                                      #MODEL field
     framework: "Recognizer2D"               #Mandatory, indicate the type of network.
     backbone:                               #Mandatory, indicate the type of backbone.
         name: "ResNetTweaksTSM"             #Mandatory, The name of backbone.
-        pretrained: "dataset/basketball/tsm_bmn_lstm/train/pretrain/ResNet50_vd_ssld_v2_pretrained.pdparams" 
+        pretrained: "dataset/basketball/tsm_bmn_lstm/train/pretrain/ResNet50_vd_ssld_v2_pretrained.pdparams"
         depth: 50                           #Optional, the depth of backbone architecture.
     head:
         name: "ppTSMHead"                   #Mandatory, indicate the type of head
@@ -43,6 +43,7 @@ PIPELINE:                                   #PIPELINE field
         transform:                          #Mandotary, image transfrom operator
             - Scale:
                 short_size: 256
+                fixed_ratio: !!float '4/3'
             - MultiScaleCrop:
                 target_size: 256
             - RandomCrop:
@@ -63,6 +64,7 @@ PIPELINE:                                   #PIPELINE field
         transform:
             - Scale:
                 short_size: 256
+                fixed_ratio: !!float '4/3'
             - CenterCrop:
                 target_size: 224
             - Image2Array:
@@ -80,6 +82,7 @@ PIPELINE:                                   #PIPELINE field
         transform:
             - Scale:
                 short_size: 256
+                fixed_ratio: !!float '4/3'
             - CenterCrop:
                 target_size: 224
             - Image2Array:

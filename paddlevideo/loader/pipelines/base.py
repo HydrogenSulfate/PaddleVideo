@@ -108,8 +108,7 @@ class BaseOperation(object):
                 short_side / min(h, w))
         else:
             raise TypeError(
-                f"Scale must be a number or tuple of int, but got {type(scale)}"
-            )
+                f"Type of scale must be {_SCALE}, but got {type(scale)}")
 
         new_size = self._calc_length((w, h), scale_factor)
 

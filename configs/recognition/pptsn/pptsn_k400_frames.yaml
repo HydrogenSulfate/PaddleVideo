@@ -48,7 +48,6 @@ PIPELINE: #PIPELINE field
         transform: #Mandotary, image transfrom operator
             - Scale:
                 scale_size: 256
-                fixed_ratio: False
             - MultiScaleCrop:
                 target_size: 224
                 allow_duplication: True
@@ -72,7 +71,6 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
-                fixed_ratio: False
             - CenterCrop:
                 target_size: 224
                 do_round: False
@@ -93,7 +91,6 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
-                fixed_ratio: False
             - TenCrop:
                 target_size: 224
             - Image2Array:

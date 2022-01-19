@@ -60,13 +60,13 @@ def parse_args():
     parser.add_argument(
         '--seed',
         type=int,
-        default=None,
+        default=1234,
         help='fixed all random seeds when the program is running')
     parser.add_argument(
         '--max_iters',
         type=int,
         default=None,
-        help='max iterations when training(this argonly used in test_tipc)')
+        help='max iterations when training(this arg only used in test_tipc)')
     parser.add_argument(
         '-p',
         '--profiler_options',

@@ -69,7 +69,6 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
-                fixed_ratio: False
             - CenterCrop:
                 target_size: 224
             - Image2Array:
@@ -91,7 +90,6 @@ PIPELINE: #PIPELINE field
         transform:
             - Scale:
                 scale_size: 256
-                fixed_ratio: False
             - CenterCrop:
                 target_size: 224
             - Image2Array:

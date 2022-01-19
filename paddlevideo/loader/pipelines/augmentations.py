@@ -14,12 +14,10 @@
 
 import math
 import random
-from typing import Any, Dict, Sequence, Tuple, Type, Union
+from typing import Any, Dict, Sequence, Tuple, Union
 
 import numpy as np
 import paddle
-from matplotlib.pyplot import axis
-from numpy import place
 
 from ..registry import PIPELINES
 from .base import _ARRAY, _BOX, _IMSIZE, _RESULT, BaseOperation
@@ -32,21 +30,21 @@ class Scale(BaseOperation):
     Args:
         scale_size (int): Short size of an image, which will be scaled to scale_size
         keep_ratio (bool, optional): Whether keep original edge ratio. Defaults to True.
-        fixed_ratio (Union[int, float, None], optional): Whether use fixed ratio instead of original edge ratio. Defaults to None.
+        fixed_ratio (Union[int, float, False], optional): Whether use fixed ratio instead of original edge ratio. Defaults to False.
         interpolation (str, optional): Interpolation method. Defaults to 'bilinear'.
 
     """
     def __init__(self,
                  scale_size: int,
                  keep_ratio: bool = True,
-                 fixed_ratio: Union[str, bool] = False,
+                 fixed_ratio: Union[int, float, bool] = False,
                  interpolation: str = 'bilinear'):
         if keep_ratio:
             scale_size: Tuple[float,
                               int] = (np.inf, scale_size)  # short side scale
             if fixed_ratio is not False:
                 raise ValueError(
-                    f"fixed_ratio must be None when keep_ratio is True")
+                    f"fixed_ratio must be False when keep_ratio is True")
         else:
             if fixed_ratio is False:
                 scale_size: Tuple[int,
@@ -54,6 +52,7 @@ class Scale(BaseOperation):
                                           )  # scale both side to scale_size
             else:
                 fixed_ratio = eval(fixed_ratio)
+                print(type(fixed_ratio), fixed_ratio)
                 if not isinstance(fixed_ratio, (int, float)):
                     raise ValueError(
                         f"fixed ratio must be int or float or False, but got {type(fixed_ratio)}"
@@ -62,7 +61,7 @@ class Scale(BaseOperation):
         self.keep_ratio = keep_ratio
         self.fixed_ratio = fixed_ratio
         self.interpolation = interpolation
-        if self.fixed_ratio is not None and self.keep_ratio:
+        if self.fixed_ratio is not False and self.keep_ratio:
             raise ValueError(
                 f"keep_ratio can't be true when fixed_ratio is provided")
 
@@ -78,7 +77,7 @@ class Scale(BaseOperation):
         imgs = results['imgs']
         w, h = self.get_im_size(imgs)
 
-        if self.fixed_ratio is not None:
+        if self.fixed_ratio is not False:
             if min(w, h) == self.scale_size:
                 ow, oh = w, h
             elif w < h:

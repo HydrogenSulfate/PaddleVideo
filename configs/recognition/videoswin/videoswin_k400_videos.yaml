@@ -61,7 +61,6 @@ PIPELINE: # PIPELINE field TODO.....
         transform: # Mandotary, image transform operator.
             - Scale:
                 scale_size: 256
-                keep_ratio: True
             - RandomResizedCrop:
             - Scale:
                 scale_size: 224
@@ -90,7 +89,6 @@ PIPELINE: # PIPELINE field TODO.....
         transform: # Mandotary, image transform operator.
             - Scale:
                 scale_size: 256
-                keep_ratio: True
             - CenterCrop:
                 target_size: 224
             - Normalization:
@@ -116,7 +114,6 @@ PIPELINE: # PIPELINE field TODO.....
         transform: # Mandotary, image transform operator.
             - Scale:
                 scale_size: 224
-                keep_ratio: True
             - UniformCrop:
                 target_size: 224
             - Normalization:
