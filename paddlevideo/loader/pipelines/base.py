@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import cv2
+from matplotlib.pyplot import axis
 import numpy as np
 import paddle
 import paddle.nn.functional as F
@@ -271,6 +272,23 @@ class BaseOperation(object):
         else:
             raise TypeError(
                 f"Input images must be numpy.ndarray, but got{type(img)}")
+
+    def im_stack(self,
+                 imgs: Sequence[_IMTYPE],
+                 axis: int = 0) -> Union[paddle.Tensor, np.ndarray]:
+        if isinstance(imgs, (list, tuple)):
+            if isinstance(imgs[0], paddle.Tensor):
+                return paddle.stack(imgs, axis=axis)
+            elif isinstance(imgs[0], (Image.Image, np.ndarray)):
+                return np.stack(imgs, axis=axis)
+            else:
+                raise ValueError(
+                    f"Type of element in imgs must be {_IMTYPE}, but got {type(imgs[0])}"
+                )
+        else:
+            raise ValueError(
+                f"Type of imgs must be {Sequence[_IMTYPE]}, but got {type(imgs)}"
+            )
 
     def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
         if isinstance(img, paddle.Tensor):

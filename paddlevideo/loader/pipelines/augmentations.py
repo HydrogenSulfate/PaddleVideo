@@ -15,7 +15,7 @@
 import math
 import random
 from typing import Any, Dict, Sequence, Tuple, Union
-
+from paddle.vision import transforms
 import numpy as np
 import paddle
 
@@ -51,8 +51,7 @@ class Scale(BaseOperation):
                                   int] = (scale_size, scale_size
                                           )  # scale both side to scale_size
             else:
-                fixed_ratio = eval(fixed_ratio)
-                print(type(fixed_ratio), fixed_ratio)
+                fixed_ratio = eval(fixed_ratio)  # convert str to float
                 if not isinstance(fixed_ratio, (int, float)):
                     raise ValueError(
                         f"fixed ratio must be int or float or False, but got {type(fixed_ratio)}"
@@ -380,8 +379,8 @@ class RandomFlip(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        flip = random.random() < self.prob
-        if flip:
+        do_flip = random.random() < self.prob
+        if do_flip:
             if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
                 imgs = self.im_flip(imgs, direction=self.direction)
             else:
@@ -416,11 +415,12 @@ class Image2Array(BaseOperation):
             Dict[str, Any]: Processed data.
         """
         imgs = results['imgs']
-        if isinstance(imgs, paddle.Tensor):
-            pass
-        else:
-            imgs = np.stack(imgs).astype('float32')
-        # THWC
+        if isinstance(imgs, (list, tuple)):
+            imgs = self.im_stack(imgs, axis=0)
+            imgs = imgs.astype('float32')
+        # imgs's shape is THWC now
+
+        # transpose to target shape permutation
         if self.format_shape == 'CTHW':
             perm = (3, 0, 1, 2)
         elif self.format_shape == 'TCHW':
@@ -431,7 +431,8 @@ class Image2Array(BaseOperation):
             raise ValueError(
                 f"format shape only support 'CTHW' and 'TCHW', but got {self.format_shape}"
             )
-        imgs = imgs.transpose(perm)
+        if perm != (0, 1, 2, 3):
+            imgs = imgs.transpose(perm)
         results['imgs'] = imgs
         return results
 
@@ -486,8 +487,8 @@ class Normalization(BaseOperation):
             self.im_norm(img, self.mean, self.std, self.inplace) for img in imgs
         ]
         if self.to_tensor:
-            norm_imgs = np.stack(norm_imgs, axis=0)
-            norm_imgs = paddle.to_tensor(norm_imgs)
+            norm_imgs = self.im_stack(norm_imgs, axis=0)
+            norm_imgs = paddle.to_tensor(norm_imgs, stop_gradient=True)
 
         results['imgs'] = norm_imgs
         return results
@@ -809,7 +810,8 @@ class UniformCrop(BaseOperation):
                 y2 = y1 + th
                 crop_imgs = self.im_crop(imgs, (x1, y1, x2, y2))
                 crop_imgs_group.append(crop_imgs)  # CTHW
-            crop_imgs_group = paddle.concat(crop_imgs_group, axis=1)  # C(GT)HW
+            crop_imgs_group = paddle.concat(crop_imgs_group,
+                                            axis=1)  # C(T+T+T)HW
         else:
             for x1, y1 in offsets:
                 x2 = x1 + tw
@@ -849,7 +851,7 @@ class GroupResize(BaseOperation):
         self.mode = mode
         for i in range(self.scale):
             s = 2**i
-            self.resize[i] = paddle.vision.transforms.Resize(
+            self.resize[i] = transforms.Resize(
                 (self.height // s, self.width // s),
                 interpolation=interpolation)
 
@@ -900,7 +902,7 @@ class ColorJitter(BaseOperation):
         contrast (float, optional): contrast. Defaults to 0.0.
         saturation (float, optional): saturation. Defaults to 0.0.
         hue (float, optional): hue. Defaults to 0.0.
-        mode (str, optional): mode. Defaults to 'train'.
+        test_mode (bool, optional): test_mode. Defaults to 'train'.
         prob (float, optional): Whether do colorjitter with probability prob. Defaults to 0.5.
     """
     def __init__(self,
@@ -908,11 +910,11 @@ class ColorJitter(BaseOperation):
                  contrast: float = 0.0,
                  saturation: float = 0.0,
                  hue: float = 0.0,
-                 mode: str = 'train',
+                 test_mode: bool = False,
                  prob: float = 0.5):
-        self.mode = mode
-        self.colorjitter = paddle.vision.transforms.ColorJitter(
-            brightness, contrast, saturation, hue)
+        self.test_mode = test_mode
+        self.colorjitter = transforms.ColorJitter(brightness, contrast,
+                                                  saturation, hue)
         self.prob = prob
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -924,27 +926,27 @@ class ColorJitter(BaseOperation):
         Returns:
             Dict[str, Any]: Processed data.
         """
-        color_aug = self.prob < random.random()
         imgs = results['imgs']
+        do_color_aug = self.prob < random.random()
         for k in list(imgs):
             f = imgs[k]
             if "color" in k or "color_n" in k:
                 n, im, i = k
                 imgs[(n, im, i)] = f
-                if color_aug:
+                if do_color_aug:
                     imgs[(n + "_aug", im, i)] = self.colorjitter(f)
                 else:
                     imgs[(n + "_aug", im, i)] = f
-        if self.mode == "train":
+        if self.test_mode:
+            for i in results['frame_idxs']:
+                del imgs[("color", i, -1)]
+                del imgs[("color_aug", i, -1)]
+        else:
             for i in results['frame_idxs']:
                 del imgs[("color", i, -1)]
                 del imgs[("color_aug", i, -1)]
                 del imgs[("color_n", i, -1)]
                 del imgs[("color_n_aug", i, -1)]
-        else:
-            for i in results['frame_idxs']:
-                del imgs[("color", i, -1)]
-                del imgs[("color_aug", i, -1)]
 
         results['img'] = imgs
         return results

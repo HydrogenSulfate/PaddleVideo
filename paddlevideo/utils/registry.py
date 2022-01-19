@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
+
 
 class Registry(object):
     """
@@ -58,7 +60,7 @@ class Registry(object):
             name, self._name)
         self._obj_map[name] = obj
 
-    def register(self, obj=None, name=None):
+    def register(self, obj=None, name=None) -> Callable:
         """
         Register the given object under the the name `obj.__name__`.
         Can be used as either a decorator or not. See docstring of this class for usage.

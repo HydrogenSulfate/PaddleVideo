@@ -15,7 +15,6 @@
 import os.path as osp
 import time
 
-import numpy as np
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
@@ -118,7 +117,7 @@ def train_model(cfg,
             drop_last=False,
             shuffle=cfg.DATASET.get(
                 'shuffle_valid',
-                False)  #NOTE: attention lstm need shuffle valid data.
+                False)  # NOTE: attention lstm need shuffle valid data.
         )
         valid_loader = build_dataloader(valid_dataset,
                                         **validate_dataloader_setting)
@@ -128,6 +127,7 @@ def train_model(cfg,
     optimizer = build_optimizer(cfg.OPTIMIZER, lr, model=model)
     if use_fleet:
         optimizer = fleet.distributed_optimizer(optimizer)
+
     # Resume
     resume_epoch = cfg.get("resume_epoch", 0)
     if resume_epoch:
@@ -137,12 +137,14 @@ def train_model(cfg,
         resume_opt_dict = load(filename + '.pdopt')
         model.set_state_dict(resume_model_dict)
         optimizer.set_state_dict(resume_opt_dict)
+        logger.info("Resume from checkpoint: {}".format(filename))
 
     # Finetune:
     if weights:
         assert resume_epoch == 0, f"Conflict occurs when finetuning, please switch resume function off by setting resume_epoch to 0 or not indicating it."
         model_dict = load(weights)
         model.set_state_dict(model_dict)
+        logger.info("Finetune from checkpoint: {}".format(weights))
 
     # 4. Train Model
     ###AMP###
@@ -155,7 +157,7 @@ def train_model(cfg,
     for epoch in range(0, cfg.epochs):
         if epoch < resume_epoch:
             logger.info(
-                f"| epoch: [{epoch+1}] <= resume_epoch: [{ resume_epoch}], continue... "
+                f"| epoch: [{epoch + 1}] <= resume_epoch: [{resume_epoch}], continue... "
             )
             continue
         model.train()
@@ -257,13 +259,13 @@ def train_model(cfg,
             tic = time.time()
             if parallel:
                 rank = dist.get_rank()
-            #single_gpu_test and multi_gpu_test
+            # single_gpu_test and multi_gpu_test
             for i, data in enumerate(valid_loader):
                 outputs = model(data, mode='valid')
                 if cfg.MODEL.framework == "FastRCNN":
                     results.extend(outputs)
 
-                #log_record
+                # log_record
                 if cfg.MODEL.framework != "FastRCNN":
                     for name, value in outputs.items():
                         if name in record_list:

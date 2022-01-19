@@ -68,7 +68,7 @@ PIPELINE: #PIPELINE field TODO.....
                 contrast: 0.2
                 saturation: 0.2
                 hue: 0.1
-                mode: "train"
+                test_mode: False
             - ToArray:
     valid:
         decode:
