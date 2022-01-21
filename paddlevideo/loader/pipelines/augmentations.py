@@ -90,7 +90,7 @@ class Scale(BaseOperation):
         else:
             ow, oh = self.scale_size
 
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             resized_imgs = self.im_resize(imgs, (ow, oh), self.interpolation)
         else:
             resized_imgs = [
@@ -133,7 +133,7 @@ class RandomCrop(BaseOperation):
         y1 = np.random.randint(0, h - th + 1)  # cover [0,h-th]
         x2 = x1 + tw
         y2 = y1 + th
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             crop_images = self.im_crop(imgs, (x1, y1, x2, y2))
         else:
             crop_images = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
@@ -199,7 +199,7 @@ class RandomResizedCrop(RandomCrop):
         x1, y1, x2, y2 = self.get_crop_bbox((img_h, img_w), self.area_range,
                                             self.aspect_ratio_range)
 
-        if isinstance(imgs, paddle.Tensor):
+        if self.isTensor(imgs):
             imgs = self.im_crop(imgs, (x1, y1, x2, y2))
         else:
             imgs = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
@@ -237,7 +237,7 @@ class CenterCrop(BaseOperation):
         y1 = (h - th) // 2
         x2 = x1 + tw
         y2 = y1 + th
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             crop_images = self.im_crop(imgs, (x1, y1, x2, y2))
         else:
             crop_images = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
@@ -343,7 +343,7 @@ class MultiScaleCrop(BaseOperation):
         tw, th, x1, y1 = _sample_crop_size((w, h))
         x2 = x1 + tw
         y2 = y1 + th
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             crop_imgs = self.im_crop(imgs, (x1, y1, x2, y2))
             resized_crop_imgs = self.im_resize(crop_imgs, self.target_size,
                                                self.interpolation)
@@ -381,7 +381,7 @@ class RandomFlip(BaseOperation):
         imgs = results['imgs']
         do_flip = random.random() < self.prob
         if do_flip:
-            if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+            if self.isTensor(imgs):  # [*,*,h,w]
                 imgs = self.im_flip(imgs, direction=self.direction)
             else:
                 imgs = [
@@ -550,7 +550,7 @@ class JitterScale(BaseOperation):
             oh = random_short_size
             ow = int(math.floor((float(w) / h) * oh))
 
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             resized_imgs = self.im_resize(imgs, (ow, oh), self.interpolation)
         else:
             resized_imgs = [
@@ -637,7 +637,7 @@ class MultiCrop(BaseOperation):
 
         x2 = x1 + self.target_size
         y2 = y1 + self.target_size
-        if isinstance(imgs, paddle.Tensor):  # [*,*,h,w]
+        if self.isTensor(imgs):  # [*,*,h,w]
             crop_images = self.im_crop(imgs, (x1, y1, x2, y2))
         else:
             crop_images = [self.im_crop(img, (x1, y1, x2, y2)) for img in imgs]
@@ -804,7 +804,7 @@ class UniformCrop(BaseOperation):
         else:
             offsets = [(0, 0), (int(math.ceil((w - tw) / 2)), 0), (w - tw, 0)]
         crop_imgs_group = []
-        if isinstance(imgs, paddle.Tensor):
+        if self.isTensor(imgs):
             for x1, y1 in offsets:
                 x2 = x1 + tw
                 y2 = y1 + th

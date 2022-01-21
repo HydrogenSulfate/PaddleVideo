@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import cv2
-from matplotlib.pyplot import axis
 import numpy as np
 import paddle
 import paddle.nn.functional as F
@@ -62,6 +61,18 @@ TENSOR_FLIP_CODES = {"horizontal": 0, "vertical": 1}
 class BaseOperation(object):
     def __init__(self) -> None:
         super().__init__()
+
+    @staticmethod
+    def isPILImage(x: _IMTYPE) -> bool:
+        return isinstance(x, Image.Image)
+
+    @staticmethod
+    def isNumpy(x: _IMTYPE) -> bool:
+        return isinstance(x, np.ndarray)
+
+    @staticmethod
+    def isTensor(x: _IMTYPE) -> bool:
+        return isinstance(x, paddle.Tensor)
 
     def _calc_length(self, size: _IMSIZE,
                      scale_factor: Union[int, float]) -> _IMSIZE:
@@ -134,17 +145,17 @@ class BaseOperation(object):
         Returns:
             _IMAGE: Resized images(s)
         """
-        if isinstance(img, np.ndarray):
+        if self.isNumpy(img):
             return cv2.resize(src=img,
                               dsize=size,
                               interpolation=CV2_INTERP_CODES[interpolation])
-        elif isinstance(img, Image.Image):
+        elif self.isPILImage(img):
             img = img.resize(size=size,
                              resample=PILLOW_INTERP_CODES[interpolation])
             if to_numpy:
                 return np.array(img)
             return img
-        elif isinstance(img, paddle.Tensor):
+        elif self.isTensor(img):
             if img.ndim != 4:
                 raise ValueError(
                     f"Tensor must be 4 dim when resize, but got {img.ndim}")
@@ -174,16 +185,16 @@ class BaseOperation(object):
         Returns:
             _IMAGE: Fliped image(s)
         """
-        if isinstance(img, np.ndarray):
+        if self.isNumpy(img):
             if inplace:
                 return cv2.flip(src=img,
                                 flipCode=CV2_FLIP_CODES[direction],
                                 dst=img)
             else:
                 return cv2.flip(src=img, flipCode=CV2_FLIP_CODES[direction])
-        elif isinstance(img, Image.Image):
+        elif self.isPILImage(img):
             return img.transpose(PILLOW_FLIP_CODES[direction])
-        elif isinstance(img, paddle.Tensor):
+        elif self.isTensor(img):
             if img.ndim != 4:
                 raise ValueError(
                     f"Tensor must be 4 dim when resize, but got {img.ndim}")
@@ -205,14 +216,11 @@ class BaseOperation(object):
             _IMAGE: Croped img
         """
         left, top, right, bottom = box
-        if isinstance(img, np.ndarray):
+        if self.isNumpy(img):
             return img[top:bottom, left:right]
-        elif isinstance(img, Image.Image):
+        elif self.isPILImage(img):
             return img.crop((left, top, right, bottom))
-        elif isinstance(img, paddle.Tensor):
-            if img.ndim != 4:
-                raise ValueError(
-                    f"Tensor must be 4 dim when resize, but got {img.ndim}")
+        elif self.isTensor(img):
             # TODO: Only support '**HW' format currently!
             return img[:, :, top:bottom, left:right]
         else:
@@ -233,13 +241,13 @@ class BaseOperation(object):
             mean (np.ndarray): mean value array to subtract
             std (np.ndarray): std value to divide
             inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
-            to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, and only supprt with cv2). Default to False.
+            to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, only supprt with cv2). Default to False.
         Returns:
             _IMAGE: Normalized image(s)
         """
-        if isinstance(img, Image.Image):
+        if self.isPILImage(img):
             img = np.array(img)
-        if isinstance(img, np.ndarray):
+        if self.isNumpy(img):
             if img.dtype == np.uint8:
                 raise TypeError(
                     f"img.dtype can't be uint8, but got {img.dtype}")
@@ -257,18 +265,6 @@ class BaseOperation(object):
                 norm_img -= mean
                 norm_img /= std
                 return norm_img
-        # elif isinstance(img, paddle.Tensor):
-        #     if inplace is True:
-        #         raise ValueError(
-        #             f"inplace=True only when type of imgs is np.ndarray")
-        #     if img.ndim != 4:
-        #         raise ValueError(
-        #             f"Tensor must be 4 dim when resize, but got {img.ndim}")
-        #     # TODO: Only support '**HW' format currently!
-        #     norm_imgs = img
-        #     norm_imgs -= mean
-        #     norm_imgs /= std
-        #     return norm_imgs
         else:
             raise TypeError(
                 f"Input images must be numpy.ndarray, but got{type(img)}")
@@ -277,9 +273,9 @@ class BaseOperation(object):
                  imgs: Sequence[_IMTYPE],
                  axis: int = 0) -> Union[paddle.Tensor, np.ndarray]:
         if isinstance(imgs, (list, tuple)):
-            if isinstance(imgs[0], paddle.Tensor):
+            if self.isTensor(imgs[0]):
                 return paddle.stack(imgs, axis=axis)
-            elif isinstance(imgs[0], (Image.Image, np.ndarray)):
+            elif self.isPILImage(imgs[0]) or self.isNumpy(imgs[0]):
                 return np.stack(imgs, axis=axis)
             else:
                 raise ValueError(
@@ -291,12 +287,12 @@ class BaseOperation(object):
             )
 
     def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
-        if isinstance(img, paddle.Tensor):
+        if self.isTensor(img):
             h, w = img.shape[-2:]
         elif isinstance(img, list):
-            if isinstance(img[0], np.ndarray):
+            if self.isNumpy(img[0]):
                 h, w = img[0].shape[:2]
-            elif isinstance(img[0], Image.Image):
+            elif self.isPILImage(img[0]):
                 w, h = img[0].size
             else:
                 raise TypeError(
@@ -309,10 +305,10 @@ class BaseOperation(object):
         return (w, h)
 
     def __repr__(self) -> str:
-        ret = self.__class__.__name__
-        ret += "("
+        repr_str = self.__class__.__name__
+        repr_str += "("
         attrs = vars(self)
         for attr_name, attr_value in attrs.items():
-            ret += f"\n  {attr_name}={attr_value}"
-        ret += "\n)"
-        return ret
+            repr_str += f"\n  {attr_name}={attr_value}"
+        repr_str += "\n)"
+        return repr_str
