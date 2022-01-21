@@ -43,7 +43,7 @@ PIPELINE:                                   #PIPELINE field
         transform:                          #Mandotary, image transfrom operator
             - Scale:
                 short_size: 256
-                fixed_ratio: !!float '4/3'
+                fixed_ratio: 4/3
             - MultiScaleCrop:
                 target_size: 256
             - RandomCrop:
@@ -64,7 +64,7 @@ PIPELINE:                                   #PIPELINE field
         transform:
             - Scale:
                 short_size: 256
-                fixed_ratio: !!float '4/3'
+                fixed_ratio: 4/3
             - CenterCrop:
                 target_size: 224
             - Image2Array:
@@ -82,7 +82,7 @@ PIPELINE:                                   #PIPELINE field
         transform:
             - Scale:
                 short_size: 256
-                fixed_ratio: !!float '4/3'
+                fixed_ratio: 4/3
             - CenterCrop:
                 target_size: 224
             - Image2Array:
