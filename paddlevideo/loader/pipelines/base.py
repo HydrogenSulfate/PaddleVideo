@@ -74,8 +74,8 @@ class BaseOperation(object):
     def isTensor(x: _IMTYPE) -> bool:
         return isinstance(x, paddle.Tensor)
 
-    def _calc_length(self, size: _IMSIZE,
-                     scale_factor: Union[int, float]) -> _IMSIZE:
+    @staticmethod
+    def _calc_length(size: _IMSIZE, scale_factor: Union[int, float]) -> _IMSIZE:
         """Get new scaled size by input size and scale_factor factor
 
         Args:
