@@ -74,7 +74,7 @@ PaddleVideo is a video model development kit produced by [PaddlePaddle Official]
   </tr>
   <tr>
     <td><a href="./docs/en/model_zoo/multimodal/actbert.md">ActBERT</a> (Learning')</td>
-    <td><a href="">T2VLAD</a> (Retrieval')</td>
+    <td><a href="./applications/T2VLAD/README.md">T2VLAD</a> (Retrieval')</td>
     <td></td>
     <td></td>
     <td></td>
@@ -103,22 +103,8 @@ PaddleVideo is a video model development kit produced by [PaddlePaddle Official]
 
 - Please refer to [Installation Instructions](docs/zh-CN/install.md) and [Usage Guide](docs/zh-CN/usage.md) before using the model library.
 
-### Applications
 
-| Applications | Descriptions |
-| :--------------- | :------------ |
-| [FootballAction]() | Football action detection solution|
-| [BasketballAction](applications/BasketballAction) | Basketball action detection solution |
-| [TableTennis](applications/ableTennis) | Table tennis action recognition solution|
-| [FigureSkating](applications/FigureSkating) | Figure skating action recognition solution|
-| [VideoTag](applications/VideoTag) | 3000-category large-scale video classification solution |
-| [MultimodalVideoTag](applications/MultimodalVideoTag) | Multimodal video classification solution|
-| [VideoQualityAssessment](applications/VideoQualityAssessment) | Video quality assessment solution|
-| [PP-Care](applications/PP-Care) | 3DMRI medical image recognition solution |
-| [EIVideo](applications/EIVideo) | Interactive video segmentation tool|
-| [Anti-UAV](applications/Anti-UAV) |UAV detection solution|
-
-## Related Dataset
+### Dataset
 
 <table>
   <tbody><tr>
@@ -166,8 +152,43 @@ PaddleVideo is a video model development kit produced by [PaddlePaddle Official]
     <td></td>
     <td></td>
   </tr>
+  <tr>
+    <td colspan="4">Text-Video Retrieval</td>
+  </tr>
+  <tr>
+    <td><a href="applications/T2VLAD/docs/dataset.md">MSR-VTT</a> (<a href="https://www.microsoft.com/en-us/research/publication/msr-vtt-a-large-video-description-dataset-for-bridging-video-and-language/" rel="nofollow">Homepage</a>) (CVPR'2016)</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td colspan="4">Text-Video Pretrained Model</td>
+  </tr>
+  <tr>
+    <td><a href="docs/zh-CN/dataset/howto100m.md">HowTo100M</a> (<a href="https://www.di.ens.fr/willow/research/howto100m/" rel="nofollow">Homepage</a>) (ICCV'2019)</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
 </tbody>
 </table>
+
+
+### Applications
+
+| Applications | Descriptions |
+| :--------------- | :------------ |
+| [FootballAction]() | Football action detection solution|
+| [BasketballAction](applications/BasketballAction) | Basketball action detection solution |
+| [TableTennis](applications/ableTennis) | Table tennis action recognition solution|
+| [FigureSkating](applications/FigureSkating) | Figure skating action recognition solution|
+| [VideoTag](applications/VideoTag) | 3000-category large-scale video classification solution |
+| [MultimodalVideoTag](applications/MultimodalVideoTag) | Multimodal video classification solution|
+| [VideoQualityAssessment](applications/VideoQualityAssessment) | Video quality assessment solution|
+| [PP-Care](applications/PP-Care) | 3DMRI medical image recognition solution |
+| [EIVideo](applications/EIVideo) | Interactive video segmentation tool|
+| [Anti-UAV](applications/Anti-UAV) |UAV detection solution|
+
 
 ## Documentation tutorial
 - AI-Studio Tutorial
@@ -177,6 +198,7 @@ PaddleVideo is a video model development kit produced by [PaddlePaddle Official]
     - [[Official] Paddle 2.1 realizes the classic model of video understanding - TSM](https://aistudio.baidu.com/aistudio/projectdetail/2310889)
     - [BMN video action positioning](https://aistudio.baidu.com/aistudio/projectdetail/2250674)
     - [ST-GCN Tutorial for Figure Skate Skeleton Point Action Recognition](https://aistudio.baidu.com/aistudio/projectdetail/2417717)
+    - [[Practice]video understanding transformer model TimeSformer](https://aistudio.baidu.com/aistudio/projectdetail/3413254?contributionType=1)
 - Contribute code
     - [How to add a new algorithm](./docs/zh-CN/contribute/add_new_algorithm.md)
     - [Configuration system design analysis](./docs/en/tutorials/config.md)
