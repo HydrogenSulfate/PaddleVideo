@@ -510,13 +510,13 @@ class Flip(BaseOperation):
                 to the next transform in pipeline.
         """
         _init_lazy_if_proper(results, self.lazy)
-        flip = np.random.rand() < self.flip_ratio
+        do_flip = np.random.rand() < self.flip_ratio
 
-        results['flip'] = flip
+        results['flip'] = do_flip
         results['flip_direction'] = self.direction
 
         if not self.lazy:
-            if flip:
+            if do_flip:
                 for i, img in enumerate(results['imgs']):
                     self.im_flip(img, self.direction, inplace=True)
                 lt = len(results['imgs'])
@@ -526,10 +526,10 @@ class Flip(BaseOperation):
             lazyop = results['lazy']
             if lazyop['flip']:
                 raise NotImplementedError('Use one Flip please')
-            lazyop['flip'] = flip
+            lazyop['flip'] = do_flip
             lazyop['flip_direction'] = self.direction
 
-        if 'gt_bboxes' in results and flip:
+        if 'gt_bboxes' in results and do_flip:
             assert not self.lazy and self.direction == 'horizontal'
             entity_box_flip = EntityBoxFlip(results['img_shape'])
             results = entity_box_flip(results)
