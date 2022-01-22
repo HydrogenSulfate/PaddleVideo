@@ -110,7 +110,7 @@ class BaseOperation(object):
         w, h = old_size
         if isinstance(scale, (float, int)):
             if scale <= 0:
-                raise ValueError(f"Invalid scale {scale}, must be positive.")
+                raise ValueError(f"invalid scale {scale}, must be positive.")
             scale_factor = scale
         elif isinstance(scale, tuple):
             long_side = max(scale)
@@ -120,7 +120,7 @@ class BaseOperation(object):
                 short_side / min(h, w))
         else:
             raise TypeError(
-                f"Type of scale must be {_SCALE}, but got {type(scale)}")
+                f"type of scale must be {_SCALE}, but got {type(scale)}.")
 
         new_size = self._calc_length((w, h), scale_factor)
 
@@ -158,7 +158,7 @@ class BaseOperation(object):
         elif self.isTensor(img):
             if img.ndim != 4:
                 raise ValueError(
-                    f"Tensor must be 4 dim when resize, but got {img.ndim}")
+                    f"tensor must be 4 dim when resize, but got {img.ndim}.")
             # TODO: Only support 'NCHW' format currently!
             return F.interpolate(
                 img,  # [*,*,h,w]
@@ -168,8 +168,7 @@ class BaseOperation(object):
                 align_corners=False)
         else:
             raise TypeError(
-                f"Input images must be numpy.ndarray or PIL.Image.Image or \
-                    paddle.Tensor, but got{type(img)}")
+                f"input images must be {_IMTYPE}, but got{type(img)}.")
 
     def im_flip(self,
                 img: _IMTYPE,
@@ -197,13 +196,12 @@ class BaseOperation(object):
         elif self.isTensor(img):
             if img.ndim != 4:
                 raise ValueError(
-                    f"Tensor must be 4 dim when resize, but got {img.ndim}")
+                    f"tensor must be 4 dim when resize, but got {img.ndim}.")
             # TODO: Only support '**HW' format currently!
             return paddle.flip(img, axis=TENSOR_FLIP_CODES[direction])
         else:
             raise TypeError(
-                f"Input images must be numpy.ndarray or PIL.Image.Image or \
-                    paddle.Tensor, but got{type(img)}")
+                f"input images must be {_IMTYPE}, but got{type(img)}.")
 
     def im_crop(self, img: _IMTYPE, box: _BOX) -> _IMTYPE:
         """Apply crop function to input image(s)
@@ -225,8 +223,8 @@ class BaseOperation(object):
             return img[:, :, top:bottom, left:right]
         else:
             raise TypeError(
-                f"Input images must be numpy.ndarray or PIL.Image.Image or \
-                    paddle.Tensor, but got{type(img)}")
+                f"input images must be numpy.ndarray or PIL.Image.Image or \
+                    paddle.Tensor, but got{type(img)}.")
 
     def im_norm(self,
                 img: np.ndarray,
@@ -250,7 +248,7 @@ class BaseOperation(object):
         if self.isNumpy(img):
             if img.dtype == np.uint8:
                 raise TypeError(
-                    f"img.dtype can't be uint8, but got {img.dtype}")
+                    f"img.dtype can't be uint8, but got {img.dtype}.")
             if to_bgr:
                 cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
             if inplace:
@@ -267,7 +265,7 @@ class BaseOperation(object):
                 return norm_img
         else:
             raise TypeError(
-                f"Input images must be numpy.ndarray, but got{type(img)}")
+                f"input images must be numpy.ndarray, but got{type(img)}.")
 
     def im_stack(self,
                  imgs: Sequence[_IMTYPE],
@@ -279,11 +277,11 @@ class BaseOperation(object):
                 return np.stack(imgs, axis=axis)
             else:
                 raise ValueError(
-                    f"Type of element in imgs must be {_IMTYPE}, but got {type(imgs[0])}"
+                    f"type of element in imgs must be {_IMTYPE}, but got {type(imgs[0])}."
                 )
         else:
             raise ValueError(
-                f"Type of imgs must be {Sequence[_IMTYPE]}, but got {type(imgs)}"
+                f"type of imgs must be {Sequence[_IMTYPE]}, but got {type(imgs)}."
             )
 
     def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
@@ -296,11 +294,11 @@ class BaseOperation(object):
                 w, h = img[0].size
             else:
                 raise TypeError(
-                    f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}"
+                    f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}."
                 )
         else:
             raise TypeError(
-                f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}"
+                f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}."
             )
         return (w, h)
 
