@@ -875,10 +875,8 @@ class GroupResize(BaseOperation):
         else:
             for scale in range(self.scale):
                 K = self.K.copy()
-
                 K[0, :] *= self.width // (2**scale)
                 K[1, :] *= self.height // (2**scale)
-
                 inv_K = np.linalg.pinv(K)
                 imgs[("K", scale)] = K
                 imgs[("inv_K", scale)] = inv_K
@@ -888,7 +886,6 @@ class GroupResize(BaseOperation):
                     n, im, i = k
                     for i in range(self.scale):
                         imgs[(n, im, i)] = self.resize[i](imgs[(n, im, i - 1)])
-
             results['imgs'] = imgs
         return results
 

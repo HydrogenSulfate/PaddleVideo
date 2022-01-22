@@ -16,6 +16,7 @@ import random
 
 import numpy as np
 import paddle
+import paddle.distributed as dist
 
 from paddlevideo.tasks import (test_model, train_dali, train_model,
                                train_model_multigrid)
@@ -53,6 +54,11 @@ def parse_args():
     parser.add_argument('--amp',
                         action='store_true',
                         help='whether to open amp training.')
+    parser.add_argument(
+        '--opt_level',
+        type=str,
+        default=None,
+        help="optimize level when open amp training, can only be 'O1' or 'O2'.")
     parser.add_argument(
         '--validate',
         action='store_true',
@@ -99,7 +105,7 @@ def main():
     _, world_size = get_dist_info()
     parallel = world_size != 1
     if parallel:
-        paddle.distributed.init_parallel_env()
+        dist.init_parallel_env()
 
     if args.test:
         test_model(cfg, weights=args.weights, parallel=parallel)
@@ -115,7 +121,8 @@ def main():
                     parallel=parallel,
                     validate=args.validate,
                     use_fleet=args.fleet,
-                    amp=args.amp,
+                    use_amp=args.amp,
+                    opt_level=args.opt_level,
                     max_iters=args.max_iters,
                     profiler_options=args.profiler_options)
 

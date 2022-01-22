@@ -18,6 +18,7 @@ import time
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
+from paddle import amp
 from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
 
@@ -32,7 +33,8 @@ def train_model(cfg,
                 weights=None,
                 parallel=True,
                 validate=True,
-                amp=False,
+                use_amp=False,
+                opt_level=None,
                 max_iters=None,
                 use_fleet=False,
                 profiler_options=None):
@@ -148,10 +150,19 @@ def train_model(cfg,
 
     # 4. Train Model
     ###AMP###
-    if amp:
-        scaler = paddle.amp.GradScaler(init_loss_scaling=2.0**16,
-                                       incr_every_n_steps=2000,
-                                       decr_every_n_nan_or_inf=1)
+    if use_amp:
+        scaler = amp.GradScaler(init_loss_scaling=2.0**16,
+                                incr_every_n_steps=2000,
+                                decr_every_n_nan_or_inf=1)
+        assert opt_level in [
+            'O1', 'O2'
+        ], f"Only support level='O1' or 'O2' when use amp now."
+        logger.info(
+            f"Training in fp16(Automatic Mixed Precision) mode, opt_level={opt_level}."
+        )
+    else:
+        assert opt_level is None, f"opt_level can only be None when training in fp32 mode."
+        logger.info(f"Training in fp32 mode.")
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
@@ -177,8 +188,8 @@ def train_model(cfg,
 
             # 4.1 forward
             # AMP #
-            if amp:
-                with paddle.amp.auto_cast(custom_black_list={"reduce_mean"}):
+            if use_amp:
+                with amp.auto_cast(custom_black_list={"reduce_mean"}):
                     outputs = model(data, mode='train')
                 avg_loss = outputs['loss']
                 if use_gradient_accumulation:
