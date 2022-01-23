@@ -135,7 +135,7 @@ def decode(filepath, args):
 
 def preprocess(img, args):
     img = {"imgs": img}
-    resize_op = Scale(short_size=args.short_size)
+    resize_op = Scale(scale_size=args.short_size)
     img = resize_op(img)
     ccrop_op = CenterCrop(target_size=args.target_size)
     img = ccrop_op(img)
@@ -191,7 +191,7 @@ class Base_Inference_helper():
         self.input_file = file_list
         return batched_inputs
 
-    def postprocess(self, output, print_output=True):
+    def postprocess(self, output: list, print_output=True):
         """
         output: list
         """
@@ -199,7 +199,7 @@ class Base_Inference_helper():
             self.input_file = [
                 self.input_file,
             ]
-        output = output[0]  # [B, num_cls]
+        output: np.ndarray = output[0]  # [B, num_cls]
         N = len(self.input_file)
         if output.shape[0] != N:
             output = output.reshape([N] + [output.shape[0] // N] +
@@ -244,7 +244,7 @@ class ppTSM_Inference_helper(Base_Inference_helper):
         ops = [
             VideoDecoder(),
             Sampler(self.num_seg, self.seg_len, valid_mode=True),
-            Scale(self.short_size),
+            Scale(self.short_size, keep_ratio=False, fixed_ratio=4 / 3),
             CenterCrop(self.target_size),
             Image2Array(),
             Normalization(img_mean, img_std)
@@ -286,10 +286,9 @@ class ppTSN_Inference_helper(Base_Inference_helper):
                     self.seg_len,
                     valid_mode=True,
                     select_left=True),
-            Scale(self.short_size,
-                  fixed_ratio=True,
-                  do_round=True,
-                  backend='cv2'),
+            Scale(scale_size=self.short_size,
+                  keep_ratio=False,
+                  fixed_ratio=4 / 3),
             TenCrop(self.target_size),
             Image2Array(),
             Normalization(img_mean, img_std)
@@ -419,8 +418,11 @@ class TimeSformer_Inference_helper(Base_Inference_helper):
                     self.seg_len,
                     valid_mode=True,
                     linspace_sample=True),
-            Normalization(self.mean, self.std, tensor_shape=[1, 1, 1, 3]),
-            Image2Array(data_format='cthw'),
+            Normalization(self.mean,
+                          self.std,
+                          tensor_shape=[1, 1, 1, 3],
+                          to_tensor=True),
+            Image2Array(format_shape='cthw'),
             JitterScale(self.short_size, self.short_size),
             UniformCrop(self.target_size)
         ]
@@ -469,17 +471,14 @@ class VideoSwin_Inference_helper(Base_Inference_helper):
                     seg_len=self.seg_len,
                     valid_mode=True,
                     use_pil=False),
-            Scale(short_size=self.short_size,
-                  fixed_ratio=False,
-                  keep_ratio=True,
-                  backend='cv2',
-                  do_round=True),
-            CenterCrop(target_size=224, backend='cv2'),
+            Scale(scale_size=self.short_size),
+            CenterCrop(target_size=224),
             Normalization(mean=self.mean,
                           std=self.std,
                           tensor_shape=[3, 1, 1, 1],
-                          inplace=True),
-            Image2Array(data_format='cthw')
+                          inplace=True,
+                          scale_factor=1),
+            Image2Array(format_shape='CTHW')
         ]
         for op in ops:
             results = op(results)
@@ -542,17 +541,13 @@ class VideoSwin_TableTennis_Inference_helper(Base_Inference_helper):
                        seg_len=self.seg_len,
                        backend='cv2',
                        valid_mode=True),
-            Scale(short_size=self.short_size,
-                  fixed_ratio=False,
-                  keep_ratio=True,
-                  backend='cv2',
-                  do_round=True),
-            UniformCrop(target_size=self.target_size, backend='cv2'),
+            Scale(scale_size=self.short_size),
+            UniformCrop(target_size=self.target_size),
             Normalization(mean=img_mean,
                           std=img_std,
                           tensor_shape=[3, 1, 1, 1],
                           inplace=True),
-            Image2Array(data_format='cthw')
+            Image2Array(format_shape='CTHW')
         ]
         for op in ops:
             results = op(results)
@@ -623,7 +618,7 @@ class SlowFast_Inference_helper(Base_Inference_helper):
             DecodeSampler(self.num_frames, self.sampling_rate, test_mode=True),
             JitterScale(self.target_size, self.target_size),
             MultiCrop(self.target_size),
-            Image2Array(transpose=False),
+            Image2Array(format_shape='THWC'),
             Normalization(img_mean, img_std, tensor_shape=[1, 1, 1, 3]),
             PackOutput(self.alpha),
         ]
@@ -919,7 +914,6 @@ class ADDS_Inference_helper(Base_Inference_helper):
                  height=256,
                  width=512,
                  full_res_shape=None,
-                 num_channels=None,
                  img_ext=".png",
                  K=None):
 

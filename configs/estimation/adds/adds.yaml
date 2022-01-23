@@ -125,7 +125,6 @@ INFERENCE:
     img_ext: ".png"
     height: 256
     width: 512
-    num_channels: 3
     K: [[0.768, 0, 0.5, 0], [0, 1.024, 0.5, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 
 model_name: "ADDS"
