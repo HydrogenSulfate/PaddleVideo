@@ -55,7 +55,7 @@ PIPELINE: #PIPELINE field
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
-                tensor_shape: [1,1,3]
+                tensor_shape: [1, 1, 3]
 
     valid: #Mandatory, indicate the pipeline to deal with the validing data. associate to the 'paddlevideo/loader/pipelines/'
         decode:
@@ -76,7 +76,7 @@ PIPELINE: #PIPELINE field
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
-                tensor_shape: [1,1,3]
+                tensor_shape: [1, 1, 3]
 
     test:
         decode:
@@ -97,7 +97,7 @@ PIPELINE: #PIPELINE field
             - Normalization:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
-                tensor_shape: [1,1,3]
+                tensor_shape: [1, 1, 3]
 
 
 OPTIMIZER: #OPTIMIZER field

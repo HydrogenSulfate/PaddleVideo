@@ -68,7 +68,7 @@ PIPELINE: # PIPELINE field TODO.....
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
-                tensor_shape: [3, 1, 1, 1]
+                tensor_shape: [3, 1, 1]
                 inplace: True
                 scale_factor: 1
             - Image2Array:
@@ -93,7 +93,7 @@ PIPELINE: # PIPELINE field TODO.....
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
-                tensor_shape: [3, 1, 1, 1]
+                tensor_shape: [3, 1, 1]
                 inplace: True
                 scale_factor: 1
             - Image2Array:
@@ -118,7 +118,7 @@ PIPELINE: # PIPELINE field TODO.....
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
-                tensor_shape: [3, 1, 1, 1]
+                tensor_shape: [3, 1, 1]
                 inplace: True
                 scale_factor: 1
             - Image2Array:

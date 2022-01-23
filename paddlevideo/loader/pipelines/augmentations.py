@@ -14,7 +14,9 @@
 
 import math
 import random
-from typing import Any, Dict, Sequence, Tuple, Union
+from typing import Any, Dict, List, Sequence, Tuple, Union
+
+from matplotlib.pyplot import axis
 from paddle.vision import transforms
 import numpy as np
 import paddle
@@ -51,7 +53,8 @@ class Scale(BaseOperation):
                                   int] = (scale_size, scale_size
                                           )  # scale both side to scale_size
             else:
-                fixed_ratio = eval(fixed_ratio)  # convert str to float
+                if isinstance(fixed_ratio, str):
+                    fixed_ratio = eval(fixed_ratio)  # convert str to float
                 if not isinstance(fixed_ratio, (int, float)):
                     raise ValueError(
                         f"fixed ratio must be int or float or False, but got {type(fixed_ratio)}"
@@ -417,7 +420,7 @@ class Image2Array(BaseOperation):
         imgs = results['imgs']
         if isinstance(imgs, (list, tuple)):
             imgs = self.im_stack(imgs, axis=0)
-            imgs = imgs.astype('float32')
+        imgs = imgs.astype('float32')
         # imgs's shape is THWC now
 
         # transpose to target shape permutation
@@ -479,15 +482,17 @@ class Normalization(BaseOperation):
         Returns:
             Dict[str, Any]: Processed data.
         """
-        imgs = results['imgs']
+        imgs: np.ndarray = results['imgs']
         if self.scale_factor != 1:
-            norm_imgs = [img / self.scale_factor for img in imgs]
-
+            norm_imgs = imgs / self.scale_factor
+        else:
+            norm_imgs = imgs
         norm_imgs = [
-            self.im_norm(img, self.mean, self.std, self.inplace) for img in imgs
+            self.im_norm(norm_img, self.mean, self.std, self.inplace)
+            for norm_img in norm_imgs
         ]
+        norm_imgs = np.stack(norm_imgs)
         if self.to_tensor:
-            norm_imgs = self.im_stack(norm_imgs, axis=0)
             norm_imgs = paddle.to_tensor(norm_imgs)
 
         results['imgs'] = norm_imgs

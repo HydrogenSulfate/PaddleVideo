@@ -235,28 +235,34 @@ class BaseOperation(object):
         """Apply normalization to input image(s)
 
         Args:
-            img (_IMAGE): input image(s)
-            mean (np.ndarray): mean value array to subtract
-            std (np.ndarray): std value to divide
+            img (_IMAGE): input image, and ndim=3.
+            mean (np.ndarray): mean value array to subtract.
+            std (np.ndarray): std value to divide.
             inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
             to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, only supprt with cv2). Default to False.
         Returns:
             _IMAGE: Normalized image(s)
         """
-        if self.isPILImage(img):
-            img = np.array(img)
         if self.isNumpy(img):
             if img.dtype == np.uint8:
                 raise TypeError(
                     f"img.dtype can't be uint8, but got {img.dtype}.")
+            h, w, c = img.shape
             if to_bgr:
-                cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
+                if c != 3:
+                    raise ValueError(
+                        f"the last channels must be 3 when to_bgr=True, but shape of img is [{h},{w},{c}]."
+                    )
+                cv2.cvtColor(img, cv2.COLOR_RGB2BGR, img)  # inplace convert
             if inplace:
+                if c != 3:
+                    raise ValueError(
+                        f"the last channels must be 3 when inplace=True, but shape of img is [{h},{w},{c}]."
+                    )
                 mean = mean.reshape(1, -1).astype("float64")  # [1, 3]
-                std_inv = 1 / (std.reshape(1, -1).astype("float64")
-                               )  # [1, 3], reciprocal of std
-                cv2.subtract(img, mean, img)  # inplace
-                cv2.multiply(img, std_inv, img)  # inplace
+                std_inv = 1 / (std.reshape(1, -1).astype("float64"))  # [1, 3]
+                cv2.subtract(img, mean, img)
+                cv2.multiply(img, std_inv, img)
                 return img
             else:
                 norm_img = img
