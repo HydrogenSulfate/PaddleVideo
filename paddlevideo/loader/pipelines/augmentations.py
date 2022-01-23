@@ -128,8 +128,8 @@ class RandomCrop(BaseOperation):
 
         th, tw = self.target_size
         if not (w >= self.target_size[1] and h >= self.target_size[0]):
-            raise ValueError(f"The clipping edge({tw})x({th}) should\
-                     not be larger than image edge({w})x({h})")
+            raise ValueError(f"The clipping edge({tw})x({th}) should "
+                             f"not be larger than image edge({w})x({h})")
 
         crop_images = []
         x1 = np.random.randint(0, w - tw + 1)  # cover [0,w-tw]
@@ -233,8 +233,8 @@ class CenterCrop(BaseOperation):
         w, h = self.get_im_size(imgs)
         th, tw = self.target_size
         if not (w >= self.target_size[1] and h >= self.target_size[0]):
-            raise ValueError(f"The clipping edge({tw})x({th}) should\
-                     not be larger than image edge({w})x({h})")
+            raise ValueError(f"The clipping edge({tw})x({th}) should "
+                             f"not be larger than image edge({w})x({h})")
 
         x1 = (w - tw) // 2
         y1 = (h - th) // 2

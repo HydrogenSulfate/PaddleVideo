@@ -86,7 +86,7 @@ class BaseOperation(object):
             f"len(size) must be 2, but got {len(size)}"
         w, h = size
         new_w = int(w * float(scale_factor) + 0.5)
-        new_h = int(h * float(scale_factor) * 0.5)
+        new_h = int(h * float(scale_factor) + 0.5)
         return (new_w, new_h)
 
     def get_scaled_size(self,
