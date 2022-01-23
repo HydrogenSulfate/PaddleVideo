@@ -422,7 +422,7 @@ class TimeSformer_Inference_helper(Base_Inference_helper):
                           self.std,
                           tensor_shape=[1, 1, 1, 3],
                           to_tensor=True),
-            Image2Array(format_shape='cthw'),
+            Image2Array(format_shape='CTHW'),
             JitterScale(self.short_size, self.short_size),
             UniformCrop(self.target_size)
         ]

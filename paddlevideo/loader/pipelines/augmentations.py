@@ -488,7 +488,7 @@ class Normalization(BaseOperation):
         ]
         if self.to_tensor:
             norm_imgs = self.im_stack(norm_imgs, axis=0)
-            norm_imgs = paddle.to_tensor(norm_imgs, stop_gradient=True)
+            norm_imgs = paddle.to_tensor(norm_imgs)
 
         results['imgs'] = norm_imgs
         return results
