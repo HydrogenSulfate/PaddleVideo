@@ -244,17 +244,20 @@ class BaseOperation(object):
             _IMAGE: Normalized image(s)
         """
         if self.isNumpy(img):
-            if img.dtype == np.uint8:
-                raise TypeError(
-                    f"img.dtype can't be uint8, but got {img.dtype}.")
             h, w, c = img.shape
             if to_bgr:
+                if img.dtype != np.uint8:
+                    raise TypeError(
+                        f"img.dtype must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
                         f"the last channels must be 3 when to_bgr=True, but shape of img is [{h},{w},{c}]."
                     )
                 cv2.cvtColor(img, cv2.COLOR_RGB2BGR, img)  # inplace convert
             if inplace:
+                if img.dtype != np.uint8:
+                    raise TypeError(
+                        f"img.dtype must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
                         f"the last channels must be 3 when inplace=True, but shape of img is [{h},{w},{c}]."

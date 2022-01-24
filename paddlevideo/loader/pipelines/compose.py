@@ -42,27 +42,28 @@ class Compose(object):
         object will call each given :attr:`transforms` sequencely.
     """
     def __init__(self, pipelines):
-        #assert isinstance(pipelines, Sequence)
+        # assert isinstance(pipelines, Sequence)
         self.pipelines = []
         for p in pipelines.values():
             if isinstance(p, dict):
                 p = build(p, PIPELINES)
                 self.pipelines.append(p)
             elif isinstance(p, list):
-                for t in p:
+                for transform in p:
                     #XXX: to deal with old format cfg, ugly code here!
-                    temp_dict = dict(name=list(t.keys())[0])
-                    for all_sub_t in t.values():
-                        if all_sub_t is not None:
-                            temp_dict.update(all_sub_t) 
-      
-                    t = build(temp_dict, PIPELINES)
-                    self.pipelines.append(t)
+                    temp_dict = dict(name=list(transform.keys())[0])
+                    for all_sub_transforms in transform.values():
+                        if all_sub_transforms is not None:
+                            temp_dict.update(all_sub_transforms)
+
+                    transform = build(temp_dict, PIPELINES)
+                    self.pipelines.append(transform)
             elif callable(p):
                 self.pipelines.append(p)
             else:
                 raise TypeError(f'pipelines must be callable or a dict,'
                                 f'but got {type(p)}')
+
     def __call__(self, data):
         for p in self.pipelines:
             try:
@@ -71,6 +72,14 @@ class Compose(object):
                 stack_info = traceback.format_exc()
                 logger = get_logger("paddlevideo")
                 logger.info("fail to perform transform [{}] with error: "
-                      "{} and stack:\n{}".format(p, e, str(stack_info)))
+                            "{} and stack:\n{}".format(p, e, str(stack_info)))
                 raise e
         return data
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += "("
+        for transform in self.pipelines:
+            repr_str += '\n    {0}'.format(transform)
+        repr_str += ")"
+        return repr_str

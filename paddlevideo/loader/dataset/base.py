@@ -78,3 +78,6 @@ class BaseDataset(Dataset, ABC):
             return self.prepare_test(idx)
         else:
             return self.prepare_train(idx)
+
+    def __repr__(self) -> str:
+        return super().__repr__()
