@@ -79,7 +79,12 @@ class Compose(object):
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += "("
+
+        transform_str_list = []
         for transform in self.pipelines:
-            repr_str += '\n    {0}'.format(transform)
+            fmt_str = str(transform).replace("\n", "\n    ")
+            transform_str_list.append('\n    {0}'.format(fmt_str))
+        repr_str += ",".join(transform_str_list)
+
         repr_str += ")"
         return repr_str

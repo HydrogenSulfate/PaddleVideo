@@ -316,6 +316,6 @@ class BaseOperation(object):
         repr_str += "("
         attrs = vars(self)
         for attr_name, attr_value in attrs.items():
-            repr_str += f"\n  {attr_name}={attr_value}"
+            repr_str += f"\n    {attr_name}={attr_value}"
         repr_str += "\n)"
         return repr_str
