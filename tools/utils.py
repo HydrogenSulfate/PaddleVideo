@@ -420,7 +420,7 @@ class TimeSformer_Inference_helper(Base_Inference_helper):
                     linspace_sample=True),
             Normalization(self.mean,
                           self.std,
-                          tensor_shape=[1, 1, 1, 3],
+                          tensor_shape=[1, 1, 3],
                           to_tensor=True),
             Image2Array(format_shape='CTHW'),
             JitterScale(self.short_size, self.short_size),
@@ -475,7 +475,7 @@ class VideoSwin_Inference_helper(Base_Inference_helper):
             CenterCrop(target_size=224),
             Normalization(mean=self.mean,
                           std=self.std,
-                          tensor_shape=[3, 1, 1, 1],
+                          tensor_shape=[3, 1, 1],
                           inplace=True,
                           scale_factor=1),
             Image2Array(format_shape='CTHW')
@@ -545,7 +545,7 @@ class VideoSwin_TableTennis_Inference_helper(Base_Inference_helper):
             UniformCrop(target_size=self.target_size),
             Normalization(mean=img_mean,
                           std=img_std,
-                          tensor_shape=[3, 1, 1, 1],
+                          tensor_shape=[3, 1, 1],
                           inplace=True),
             Image2Array(format_shape='CTHW')
         ]
@@ -619,7 +619,7 @@ class SlowFast_Inference_helper(Base_Inference_helper):
             JitterScale(self.target_size, self.target_size),
             MultiCrop(self.target_size),
             Image2Array(format_shape='THWC'),
-            Normalization(img_mean, img_std, tensor_shape=[1, 1, 1, 3]),
+            Normalization(img_mean, img_std, tensor_shape=[1, 1, 3]),
             PackOutput(self.alpha),
         ]
         for op in ops:
