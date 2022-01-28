@@ -158,11 +158,11 @@ def train_model(cfg,
             'O1', 'O2'
         ], f"Only support level='O1' or 'O2' when use amp now."
         logger.info(
-            f"Training in fp16(Automatic Mixed Precision) mode, opt_level={opt_level}."
+            f"Training with fp16(Automatic Mixed Precision) mode, opt_level={opt_level}."
         )
     else:
         assert opt_level is None, f"opt_level can only be None when training in fp32 mode."
-        logger.info(f"Training in fp32 mode.")
+        logger.info(f"Training with fp32 mode.")
 
     best = 0.0
     for epoch in range(0, cfg.epochs):

@@ -19,7 +19,7 @@ import numpy as np
 from PIL import Image
 
 from ..registry import PIPELINES
-from .base import (_ARRAY, _BOX, _IMSIZE, _IMTYPE, _RESULT, CV2_INTERP_CODES,
+from .base import (_ARRAY, _BOX, _IMSIZE, _IMTYPE, _RESULT, OPENCV_INTERP_CODES,
                    PILLOW_INTERP_CODES, BaseOperation)
 
 
@@ -64,7 +64,7 @@ def imresize(
     interpolation: str = 'bilinear',
     out=None,
     backend: Optional[str] = None
-) -> Union[_IMTYPE, Tuple[_IMTYPE, float, float]]:
+) -> Union[np.ndarray, Tuple[np.ndarray, float, float]]:
     """Resize image to a given size.  """
     h, w = img.shape[:2]
     if backend is None:
@@ -79,10 +79,11 @@ def imresize(
         pil_image = pil_image.resize(size, PILLOW_INTERP_CODES[interpolation])
         resized_img = np.array(pil_image)
     else:
-        resized_img = cv2.resize(img,
-                                 size,
-                                 dst=out,
-                                 interpolation=CV2_INTERP_CODES[interpolation])
+        resized_img = cv2.resize(
+            img,
+            size,
+            dst=out,
+            interpolation=OPENCV_INTERP_CODES[interpolation])
     if not return_scale:
         return resized_img
     else:

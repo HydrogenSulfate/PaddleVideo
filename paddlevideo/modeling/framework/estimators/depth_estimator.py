@@ -10,12 +10,9 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import paddle
 from paddlevideo.modeling.framework.estimators.base import BaseEstimator
 from paddlevideo.modeling.registry import ESTIMATORS
 from paddlevideo.utils import get_logger
-
-from ... import builder
 
 logger = get_logger("paddlevideo")
 

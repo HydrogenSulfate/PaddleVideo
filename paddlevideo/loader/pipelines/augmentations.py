@@ -1,4 +1,4 @@
-#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,11 @@
 
 import math
 import random
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, Sequence, Tuple, Union
 
-from matplotlib.pyplot import axis
-from paddle.vision import transforms
 import numpy as np
 import paddle
+from paddle.vision import transforms
 
 from ..registry import PIPELINES
 from .base import _ARRAY, _BOX, _IMSIZE, _RESULT, BaseOperation
@@ -254,7 +253,7 @@ class MultiScaleCrop(BaseOperation):
 
     Args:
         target_size (int): Random crop a square with the target_size from an image.
-        scales (int, optional): List of candidate cropping scales.. Defaults to None.
+        scales (_ARRAY, optional): List of candidate cropping scales.. Defaults to None.
         max_distort (int, optional): Maximum allowable deformation combination distance. Defaults to 1.
         fix_crop (bool, optional): Whether to fix the cutting start point. Defaults to True.
         allow_duplication (bool, optional): Whether to allow duplicate candidate crop starting points. Defaults to False.
@@ -573,7 +572,7 @@ class MultiCrop(BaseOperation):
     Args:
         target_size (int): Random crop a square with the target_size from an image
         default_crop_size (int, optional): default_crop_size. Defaults to 224.
-        short_cycle_factors (List[float], optional): short_cycle_factors. Defaults to [0.5, 0.7071].
+        short_cycle_factors (_ARRAY, optional): short_cycle_factors. Defaults to [0.5, 0.7071].
         test_mode (bool, optional): Whether in test mode. Defaults to False.
     """
     def __init__(self,
@@ -599,7 +598,7 @@ class MultiCrop(BaseOperation):
         spatial_sample_index = results['spatial_sample_index']
         spatial_num_clips = results['spatial_num_clips']
 
-        short_cycle_idx = results.get('short_cycle_idx')
+        short_cycle_idx: int = results.get('short_cycle_idx')
         if short_cycle_idx in [0, 1]:
             self.target_size = int(
                 round(self.short_cycle_factors[short_cycle_idx] *
@@ -837,7 +836,7 @@ class GroupResize(BaseOperation):
         height (int): image height
         width (int): image width
         scale (int): number of scales in image pyramid
-        K (List[List]): Camera intrinsics matrix.
+        K (_ARRAY): Camera intrinsics matrix.
         mode (str, optional): [description]. Defaults to 'train'.
         interpolation (str, optional): Interpolation method. Defaults to 'lanczos'.
     """

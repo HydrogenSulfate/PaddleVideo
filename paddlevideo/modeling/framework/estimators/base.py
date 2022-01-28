@@ -12,7 +12,6 @@
 
 from abc import abstractmethod
 
-import paddle
 import paddle.nn as nn
 from paddlevideo.modeling.registry import ESTIMATORS
 from paddlevideo.utils import get_logger

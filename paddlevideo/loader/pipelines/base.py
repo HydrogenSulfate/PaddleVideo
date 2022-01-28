@@ -14,15 +14,18 @@ _ARRAY = Sequence[Union[int, float]]
 _RESULT = Dict[str, Any]
 
 PILLOW_INTERP_CODES = {
+    "none": Image.NONE,
     "nearest": Image.NEAREST,
     "bilinear": Image.BILINEAR,
+    "linear": Image.LINEAR,
     "bicubic": Image.BICUBIC,
+    "cubic": Image.CUBIC,
     "box": Image.BOX,
     "lanczos": Image.LANCZOS,
     "hamming": Image.HAMMING,
     "antialias": Image.ANTIALIAS
 }
-CV2_INTERP_CODES = {
+OPENCV_INTERP_CODES = {
     "nearest": cv2.INTER_NEAREST,
     "bilinear": cv2.INTER_LINEAR,
     "bicubic": cv2.INTER_CUBIC,
@@ -75,15 +78,16 @@ class BaseOperation(object):
         return isinstance(x, paddle.Tensor)
 
     @staticmethod
-    def _calc_length(size: _IMSIZE, scale_factor: Union[int, float]) -> _IMSIZE:
-        """Get new scaled size by input size and scale_factor factor
+    def _compute_length(size: _IMSIZE, scale_factor: Union[int,
+                                                           float]) -> _IMSIZE:
+        """Compute the new scale size by input size and scale factor
 
         Args:
             size (_IMSIZE): input size, including width and height
             scale_factor (Union[int, float]): scale factor
         """
-        assert len(size) == 2, \
-            f"len(size) must be 2, but got {len(size)}"
+        if len(size) != 2:
+            raise ValueError(f"len(size) must be 2, but got {len(size)}")
         w, h = size
         new_w = int(w * float(scale_factor) + 0.5)
         new_h = int(h * float(scale_factor) + 0.5)
@@ -95,7 +99,7 @@ class BaseOperation(object):
                         return_scale: bool = False
                         ) -> Union[_IMSIZE, Tuple[_IMSIZE, _SCALE]]:
         """Get scaled size by old_size and scale param(factor or int size),
-           only used when keep ratio.
+           called only when need keep ratio.
 
         Args:
             old_size (IMSIZE): original size, contains (w, h)
@@ -110,7 +114,7 @@ class BaseOperation(object):
         w, h = old_size
         if isinstance(scale, (float, int)):
             if scale <= 0:
-                raise ValueError(f"invalid scale {scale}, must be positive.")
+                raise ValueError(f"scale must be positive, but got {scale}.")
             scale_factor = scale
         elif isinstance(scale, tuple):
             long_side = max(scale)
@@ -122,7 +126,7 @@ class BaseOperation(object):
             raise TypeError(
                 f"type of scale must be {_SCALE}, but got {type(scale)}.")
 
-        new_size = self._calc_length((w, h), scale_factor)
+        new_size = self._compute_length((w, h), scale_factor)
 
         if return_scale:
             return (new_size, scale_factor)
@@ -148,7 +152,7 @@ class BaseOperation(object):
         if self.isNumpy(img):
             return cv2.resize(src=img,
                               dsize=size,
-                              interpolation=CV2_INTERP_CODES[interpolation])
+                              interpolation=OPENCV_INTERP_CODES[interpolation])
         elif self.isPILImage(img):
             img = img.resize(size=size,
                              resample=PILLOW_INTERP_CODES[interpolation])
@@ -168,7 +172,7 @@ class BaseOperation(object):
                 align_corners=False)
         else:
             raise TypeError(
-                f"input images must be {_IMTYPE}, but got{type(img)}.")
+                f"input images must be {_IMTYPE}, but got {type(img)}.")
 
     def im_flip(self,
                 img: _IMTYPE,
@@ -196,12 +200,13 @@ class BaseOperation(object):
         elif self.isTensor(img):
             if img.ndim != 4:
                 raise ValueError(
-                    f"tensor must be 4 dim when resize, but got {img.ndim}.")
+                    f"tensor must be 4 dim when resize, but got {img.ndim} dim."
+                )
             # TODO: Only support '**HW' format currently!
             return paddle.flip(img, axis=TENSOR_FLIP_CODES[direction])
         else:
             raise TypeError(
-                f"input images must be {_IMTYPE}, but got{type(img)}.")
+                f"input images must be {_IMTYPE}, but got {type(img)}.")
 
     def im_crop(self, img: _IMTYPE, box: _BOX) -> _IMTYPE:
         """Apply crop function to input image(s)
@@ -223,8 +228,8 @@ class BaseOperation(object):
             return img[:, :, top:bottom, left:right]
         else:
             raise TypeError(
-                f"input images must be numpy.ndarray or PIL.Image.Image or \
-                    paddle.Tensor, but got{type(img)}.")
+                f"input images must be numpy.ndarray or PIL.Image.Image or "
+                f"paddle.Tensor, but got {type(img)}.")
 
     def im_norm(self,
                 img: np.ndarray,
@@ -248,7 +253,7 @@ class BaseOperation(object):
             if to_bgr:
                 if img.dtype != np.uint8:
                     raise TypeError(
-                        f"img.dtype must be uint8, but got {img.dtype}.")
+                        f"img's data type must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
                         f"the last channels must be 3 when to_bgr=True, but shape of img is [{h},{w},{c}]."
@@ -257,7 +262,7 @@ class BaseOperation(object):
             if inplace:
                 if img.dtype != np.uint8:
                     raise TypeError(
-                        f"img.dtype must be uint8, but got {img.dtype}.")
+                        f"img's data type must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
                         f"the last channels must be 3 when inplace=True, but shape of img is [{h},{w},{c}]."
@@ -274,7 +279,7 @@ class BaseOperation(object):
                 return norm_img
         else:
             raise TypeError(
-                f"input images must be numpy.ndarray, but got{type(img)}.")
+                f"input images must be numpy.ndarray, but got {type(img)}.")
 
     def im_stack(self,
                  imgs: Sequence[_IMTYPE],
@@ -319,3 +324,6 @@ class BaseOperation(object):
             repr_str += f"\n    {attr_name}={attr_value}"
         repr_str += "\n)"
         return repr_str
+
+
+print(_IMSIZE, _SCALE, _IMTYPE, _BOX, _ARRAY, _RESULT, sep='\n')
