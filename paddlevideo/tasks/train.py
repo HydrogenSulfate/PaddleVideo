@@ -48,7 +48,6 @@ def train_model(cfg,
         use_fleet (bool):
         profiler_options (str): Activate the profiler function Default: None.
     """
-    global scaler
     if use_fleet:
         fleet.init(is_collective=True)
 
