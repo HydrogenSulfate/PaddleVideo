@@ -40,6 +40,7 @@ class Scale(BaseOperation):
                  keep_ratio: bool = True,
                  fixed_ratio: Union[int, float, bool] = False,
                  interpolation: str = 'bilinear'):
+        super(Scale, self).__init__()
         if keep_ratio:
             scale_size: Tuple[float,
                               int] = (np.inf, scale_size)  # short side scale
@@ -111,7 +112,8 @@ class RandomCrop(BaseOperation):
         target_size(int): Random crop a square with the target_size from an image.
     """
     def __init__(self, target_size: int):
-        self.target_size = (target_size, target_size)
+        super(RandomCrop, self).__init__()
+        self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
         """Apply randomcrop operations on images
@@ -155,6 +157,7 @@ class RandomResizedCrop(RandomCrop):
     def __init__(self,
                  area_range: Tuple[float, float] = (0.08, 1.0),
                  aspect_ratio_range: Tuple[float, float] = (3 / 4, 4 / 3)):
+        super(RandomResizedCrop, self).__init__()
         self.area_range = area_range
         self.aspect_ratio_range = aspect_ratio_range
 
@@ -217,6 +220,7 @@ class CenterCrop(BaseOperation):
         target_size (int): Center crop a square with the target_size from an image.
     """
     def __init__(self, target_size: int):
+        super(CenterCrop, self).__init__()
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -268,6 +272,7 @@ class MultiScaleCrop(BaseOperation):
                  allow_duplication: bool = False,
                  more_fix_crop: bool = True,
                  interpolation: str = 'bilinear'):
+        super(MultiScaleCrop, self).__init__()
         self.target_size = (target_size, target_size)
         self.scales = scales if scales else [1, .875, .75, .66]
         self.max_distort = max_distort
@@ -368,6 +373,7 @@ class RandomFlip(BaseOperation):
         direction (str, optional): Flip direction. Defaults to 'horizontal'.
     """
     def __init__(self, prob: float = 0.5, direction: str = 'horizontal'):
+        super(RandomFlip, self).__init__()
         self.prob = prob
         self.direction = direction
 
@@ -402,6 +408,7 @@ class Image2Array(BaseOperation):
         format_shape (str, optional): format shape. Defaults to 'TCHW'.
     """
     def __init__(self, format_shape: str = 'TCHW'):
+        super(Image2Array, self).__init__()
         assert format_shape in [
             'TCHW', 'CTHW', 'THWC'
         ], f"Target format must in ['TCHW', 'CTHW', 'THWC'], but got {format_shape}"
@@ -458,6 +465,7 @@ class Normalization(BaseOperation):
                  tensor_shape: Sequence[int] = [3, 1, 1],
                  to_tensor: bool = False,
                  inplace: bool = False):
+        super(Normalization, self).__init__()
         if not isinstance(mean, list):
             raise TypeError(f'mean must be list, but got {type(mean)}')
         if not isinstance(std, list):
@@ -512,6 +520,7 @@ class JitterScale(BaseOperation):
                  short_cycle_factors: _ARRAY = [0.5, 0.7071],
                  default_min_size: int = 256,
                  interpolation: str = 'bilinear'):
+        super(JitterScale, self).__init__()
         self.min_size = min_size
         self.max_size = max_size
         self.short_cycle_factors = short_cycle_factors
@@ -580,6 +589,7 @@ class MultiCrop(BaseOperation):
                  default_crop_size: int = 224,
                  short_cycle_factors: _ARRAY = [0.5, 0.7071],
                  test_mode: bool = False):
+        super(MultiCrop, self).__init__()
         self.orig_target_size = self.target_size = target_size
         self.short_cycle_factors = short_cycle_factors
         self.default_crop_size = default_crop_size
@@ -657,6 +667,7 @@ class PackOutput(BaseOperation):
         alpha (int): temporal length of fast/slow
     """
     def __init__(self, alpha: int):
+        super(PackOutput, self).__init__()
         self.alpha = alpha
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -697,6 +708,7 @@ class GroupFullResSample(BaseOperation):
         flip (bool, optional): Whether take extra flip. Defaults to False.
     """
     def __init__(self, crop_size: int, flip: bool = False):
+        super(GroupFullResSample, self).__init__()
         self.crop_size = (crop_size, crop_size)
         self.flip = flip
 
@@ -744,6 +756,7 @@ class TenCrop(BaseOperation):
         target_size (int): (target_size, target_size) of target size for crop
     """
     def __init__(self, target_size: int):
+        super(TenCrop, self).__init__()
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -789,6 +802,7 @@ class UniformCrop(BaseOperation):
         target_size (int): (target_size, target_size) of target size for crop.
     """
     def __init__(self, target_size: int):
+        super(UniformCrop, self).__init__()
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -847,6 +861,7 @@ class GroupResize(BaseOperation):
                  K: _ARRAY,
                  mode: str = 'train',
                  interpolation: str = 'lanczos'):
+        super(GroupResize, self).__init__()
         self.height = height
         self.width = width
         self.scale = scale
@@ -913,6 +928,7 @@ class ColorJitter(BaseOperation):
                  hue: float = 0.0,
                  test_mode: bool = False,
                  prob: float = 0.5):
+        super(ColorJitter, self).__init__()
         self.test_mode = test_mode
         self.colorjitter = transforms.ColorJitter(brightness, contrast,
                                                   saturation, hue)
@@ -962,6 +978,7 @@ class GroupRandomFlip(BaseOperation):
         direction (str, optional): Flip direction. Defaults to 'horizontal'.
     """
     def __init__(self, prob: float = 0.5, direction: str = 'horizontal'):
+        super(GroupRandomFlip, self).__init__()
         self.prob = prob
         self.direction = direction
 
@@ -994,6 +1011,7 @@ class ToArray(BaseOperation):
     """Convert images to array.
     """
     def __init__(self):
+        super(ToArray, self).__init__()
         pass
 
     def __call__(self, results: _RESULT) -> _RESULT:

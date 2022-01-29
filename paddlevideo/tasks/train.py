@@ -19,9 +19,9 @@ import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
 from paddle import amp
+
 from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
-
 from ..loader.builder import build_dataloader, build_dataset
 from ..metrics.ava_utils import collect_results_cpu
 from ..modeling.builder import build_model
@@ -363,10 +363,10 @@ def train_model(cfg,
             save(
                 optimizer.state_dict(),
                 osp.join(output_dir,
-                         model_name + f"_epoch_{epoch+1:05d}.pdopt"))
+                         model_name + f"_epoch_{epoch + 1:05d}.pdopt"))
             save(
                 model.state_dict(),
                 osp.join(output_dir,
-                         model_name + f"_epoch_{epoch+1:05d}.pdparams"))
+                         model_name + f"_epoch_{epoch + 1:05d}.pdparams"))
 
     logger.info(f'training {model_name} finished')

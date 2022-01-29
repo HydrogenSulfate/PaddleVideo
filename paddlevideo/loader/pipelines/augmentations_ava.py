@@ -104,6 +104,7 @@ class EntityBoxRescale(BaseOperation):
         scale_factor (np.ndarray): The scale factor used entity_box rescaling.
     """
     def __init__(self, scale_factor: np.ndarray) -> None:
+        super(EntityBoxRescale, self).__init__()
         self.scale_factor = scale_factor
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -136,6 +137,7 @@ class EntityBoxCrop(BaseOperation):
         crop_bbox(np.ndarray | None): The bbox used to crop the original image.
     """
     def __init__(self, crop_bbox: Optional[_BOX]) -> None:
+        super(EntityBoxCrop, self).__init__()
         self.crop_bbox = crop_bbox
 
     def __call__(self, results: _RESULT) -> _RESULT:

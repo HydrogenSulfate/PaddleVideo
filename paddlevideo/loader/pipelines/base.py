@@ -63,7 +63,7 @@ TENSOR_FLIP_CODES = {"horizontal": 0, "vertical": 1}
 
 class BaseOperation(object):
     def __init__(self) -> None:
-        super().__init__()
+        super(BaseOperation, self).__init__()
 
     @staticmethod
     def isPILImage(x: _IMTYPE) -> bool:
@@ -324,6 +324,3 @@ class BaseOperation(object):
             repr_str += f"\n    {attr_name}={attr_value}"
         repr_str += "\n)"
         return repr_str
-
-
-print(_IMSIZE, _SCALE, _IMTYPE, _BOX, _ARRAY, _RESULT, sep='\n')
