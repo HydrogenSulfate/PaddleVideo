@@ -18,7 +18,6 @@ import time
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
-from paddle import amp
 
 from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
@@ -49,6 +48,7 @@ def train_model(cfg,
         use_fleet (bool):
         profiler_options (str): Activate the profiler function Default: None.
     """
+    global scaler
     if use_fleet:
         fleet.init(is_collective=True)
 
@@ -151,9 +151,9 @@ def train_model(cfg,
     # 4. Train Model
     ###AMP###
     if use_amp:
-        scaler = amp.GradScaler(init_loss_scaling=2.0**16,
-                                incr_every_n_steps=2000,
-                                decr_every_n_nan_or_inf=1)
+        scaler = paddle.amp.GradScaler(init_loss_scaling=2.0**16,
+                                       incr_every_n_steps=2000,
+                                       decr_every_n_nan_or_inf=1)
         assert opt_level in [
             'O1', 'O2'
         ], f"Only support level='O1' or 'O2' when use amp now."
@@ -189,7 +189,7 @@ def train_model(cfg,
             # 4.1 forward
             # AMP #
             if use_amp:
-                with amp.auto_cast(custom_black_list={"reduce_mean"}):
+                with paddle.amp.auto_cast(custom_black_list={"reduce_mean"}):
                     outputs = model(data, mode='train')
                 avg_loss = outputs['loss']
                 if use_gradient_accumulation:
