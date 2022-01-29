@@ -237,14 +237,15 @@ class BaseOperation(object):
                 std: np.ndarray,
                 inplace: bool = False,
                 to_bgr: bool = False) -> np.ndarray:
-        """Apply normalization to input image(s)
+        """Apply normalization to an single image.
 
         Args:
-            img (_IMAGE): input image, and ndim=3.
+            img (_IMAGE): input image, image.ndim must be 3.
             mean (np.ndarray): mean value array to subtract.
             std (np.ndarray): std value to divide.
             inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
             to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, only supprt with cv2). Default to False.
+
         Returns:
             _IMAGE: Normalized image(s)
         """
@@ -284,6 +285,15 @@ class BaseOperation(object):
     def im_stack(self,
                  imgs: Sequence[_IMTYPE],
                  axis: int = 0) -> Union[paddle.Tensor, np.ndarray]:
+        """Apply image stack on tuple or list of images.
+
+        Args:
+            imgs (Sequence[_IMTYPE]): Sequence of images.
+            axis (int, optional): stack axis. Defaults to 0.
+
+        Returns:
+            Union[paddle.Tensor, np.ndarray]: Stacked images.
+        """
         if isinstance(imgs, (list, tuple)):
             if self.isTensor(imgs[0]):
                 return paddle.stack(imgs, axis=axis)
@@ -299,6 +309,14 @@ class BaseOperation(object):
             )
 
     def get_im_size(self, img: Union[_IMTYPE, List[_IMTYPE]]) -> _IMSIZE:
+        """Get Image size from a single image or Sequence of images.
+
+        Args:
+            img (Union[_IMTYPE, List[_IMTYPE]]): a single image or Sequence of images.
+
+        Returns:
+            _IMSIZE: (width, height) of a single image.
+        """
         if self.isTensor(img):
             h, w = img.shape[-2:]
         elif isinstance(img, list):
@@ -317,6 +335,11 @@ class BaseOperation(object):
         return (w, h)
 
     def __repr__(self) -> str:
+        """Return the representation string of an operation.
+
+        Returns:
+            str: representation string.
+        """
         repr_str = self.__class__.__name__
         repr_str += "("
         attrs = vars(self)
