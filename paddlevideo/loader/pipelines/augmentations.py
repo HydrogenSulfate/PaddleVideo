@@ -273,7 +273,7 @@ class MultiScaleCrop(BaseOperation):
                  more_fix_crop: bool = True,
                  interpolation: str = 'bilinear'):
         super(MultiScaleCrop, self).__init__()
-        self.target_size = (target_size, target_size)
+        self.target_size: _IMSIZE = (target_size, target_size)
         self.scales = scales if scales else [1, .875, .75, .66]
         self.max_distort = max_distort
         self.fix_crop = fix_crop
@@ -709,7 +709,7 @@ class GroupFullResSample(BaseOperation):
     """
     def __init__(self, crop_size: int, flip: bool = False):
         super(GroupFullResSample, self).__init__()
-        self.crop_size = (crop_size, crop_size)
+        self.crop_size: _IMSIZE = (crop_size, crop_size)
         self.flip = flip
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -757,7 +757,7 @@ class TenCrop(BaseOperation):
     """
     def __init__(self, target_size: int):
         super(TenCrop, self).__init__()
-        self.target_size = (target_size, target_size)
+        self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
         """Apply groupfullressample operations on images
@@ -803,7 +803,7 @@ class UniformCrop(BaseOperation):
     """
     def __init__(self, target_size: int):
         super(UniformCrop, self).__init__()
-        self.target_size = (target_size, target_size)
+        self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
         """Apply uniformcrop operations on images

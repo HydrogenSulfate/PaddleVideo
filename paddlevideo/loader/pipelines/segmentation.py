@@ -18,7 +18,7 @@ import cv2
 import numpy as np
 
 from ..registry import PIPELINES
-from .base import _RESULT, BaseOperation
+from .base import BaseOperation
 
 
 @PIPELINES.register()
@@ -28,6 +28,7 @@ class MultiRestrictSize(BaseOperation):
                  max_size: int = 800,
                  flip: bool = False,
                  multi_scale: List[float] = [1.3]):
+        super(MultiRestrictSize, self).__init__()
         self.min_size = min_size
         self.max_size = max_size
         self.multi_scale = multi_scale
@@ -109,6 +110,9 @@ class MultiRestrictSize(BaseOperation):
 
 @PIPELINES.register()
 class MultiNorm(BaseOperation):
+    def __init__(self):
+        super(MultiNorm, self).__init__()
+
     def __call__(self, samples: List[Dict]) -> List[Dict]:
         for idx in range(len(samples)):
             sample = samples[idx]
