@@ -308,11 +308,11 @@ class BaseOperation(object):
                 w, h = img[0].size
             else:
                 raise TypeError(
-                    f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}."
+                    f"img must be type of {paddle.Tensor} or {List[np.ndarray, Image.Image]}, but got {type(img)}."
                 )
         else:
             raise TypeError(
-                f"img must be type of {Union[_IMTYPE, List[_IMTYPE]]}, but got {type(img)}."
+                f"img must be type of {paddle.Tensor} or {List[np.ndarray, Image.Image]}, but got {type(img)}."
             )
         return (w, h)
 
