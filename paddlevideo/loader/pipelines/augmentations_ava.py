@@ -182,6 +182,7 @@ class EntityBoxFlip(BaseOperation):
         img_shape (tuple[int]): The img shape.
     """
     def __init__(self, img_shape: _IMSIZE) -> None:
+        super(EntityBoxFlip, self).__init__()
         self.img_shape = img_shape
 
     def __call__(self, results: _RESULT) -> _RESULT:
@@ -235,6 +236,7 @@ class Resize(BaseOperation):
                  keep_ratio: bool = True,
                  interpolation: str = 'bilinear',
                  lazy: bool = False) -> None:
+        super(Resize, self).__init__()
         if isinstance(scale, float):
             if scale <= 0:
                 raise ValueError(f'Invalid scale {scale}, must be positive.')
@@ -304,6 +306,7 @@ class RandomRescale(BaseOperation):
     def __init__(self,
                  scale_range: Union[str, Tuple],
                  interpolation: str = 'bilinear') -> None:
+        super(RandomRescale, self).__init__()
         scale_range = eval(scale_range)
         self.scale_range = scale_range
 
@@ -349,6 +352,7 @@ class Rescale(BaseOperation):
             "nearest" | "bilinear". Default: "bilinear".
     """
     def __init__(self, scale_range, interpolation: str = 'bilinear') -> None:
+        super(Rescale, self).__init__()
         scale_range = eval(scale_range)
         self.scale_range = scale_range
 
@@ -383,6 +387,7 @@ class RandomCrop_v2(BaseOperation):
         lazy (bool): Determine whether to apply lazy operation. Default: False.
     """
     def __init__(self, size: int, lazy: bool = False) -> None:
+        super(RandomCrop_v2, self).__init__()
         if not isinstance(size, int):
             raise TypeError(f'Size must be an int, but got {type(size)}')
         self.size = size
@@ -498,6 +503,7 @@ class Flip(BaseOperation):
                  flip_ratio: float = 0.5,
                  direction: str = 'horizontal',
                  lazy: bool = False) -> None:
+        super(Flip, self).__init__()
         if direction not in self._directions:
             raise ValueError(f'Direction {direction} is not supported. '
                              f'Currently support ones are {self._directions}')
@@ -561,6 +567,7 @@ class Normalize(BaseOperation):
                  std: _ARRAY,
                  to_bgr: bool = False,
                  adjust_magnitude: bool = False) -> None:
+        super(Normalize, self).__init__()
         if not isinstance(mean, Sequence):
             raise TypeError(f'Mean must be _ARRAY, but got {type(mean)}')
 
