@@ -146,7 +146,7 @@ class RandomCrop(BaseOperation):
 
 
 @PIPELINES.register()
-class RandomResizedCrop(RandomCrop):
+class RandomResizedCrop(BaseOperation):
     """A crop of random size (default: of 0.08 to 1.0) of the original size and a random
        aspect ratio (default: of 3/4 to 4/3) of the original aspect ratio is made.
 
