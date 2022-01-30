@@ -198,6 +198,14 @@ class RandomResizedCrop(BaseOperation):
         return x_offset, y_offset, x_offset + crop_size, y_offset + crop_size
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply randomresizedcrop operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         imgs = results['imgs']
         img_w, img_h = self.get_im_size(imgs)
 
@@ -590,7 +598,8 @@ class MultiCrop(BaseOperation):
                  short_cycle_factors: _ARRAY = [0.5, 0.7071],
                  test_mode: bool = False):
         super(MultiCrop, self).__init__()
-        self.orig_target_size = self.target_size = target_size
+        self.orig_target_size = target_size
+        self.target_size = target_size
         self.short_cycle_factors = short_cycle_factors
         self.default_crop_size = default_crop_size
         self.test_mode = test_mode
@@ -713,6 +722,14 @@ class GroupFullResSample(BaseOperation):
         self.flip = flip
 
     def __call__(self, results: _RESULT) -> _RESULT:
+        """Apply groupfullressample operations on images
+
+        Args:
+            results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
+
+        Returns:
+            Dict[str, Any]: Processed data.
+        """
         img_group = results['imgs']
 
         image_w, image_h = img_group[0].size
@@ -760,7 +777,7 @@ class TenCrop(BaseOperation):
         self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply groupfullressample operations on images
+        """Apply tencrop operations on images
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
