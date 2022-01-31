@@ -6,6 +6,9 @@ import paddle
 import paddle.nn.functional as F
 from PIL import Image
 
+# ----------------------------------------------------------------
+# Common variable alias names
+# ----------------------------------------------------------------
 _IMSIZE = Tuple[int, int]
 _SCALE = Union[int, float, Tuple[int, int]]
 _IMTYPE = Union[np.ndarray, Image.Image, paddle.Tensor]
@@ -13,6 +16,9 @@ _BOX = Tuple[int, int, int, int]
 _ARRAY = Sequence[Union[int, float]]
 _RESULT = Dict[str, Any]
 
+# ----------------------------------------------------------------
+# Common interpolation constants
+# ----------------------------------------------------------------
 PILLOW_INTERP_CODES = {
     "none": Image.NONE,
     "nearest": Image.NEAREST,
@@ -40,6 +46,9 @@ TENSOR_INTERP_CODES = {
     "area": "area",
 }
 
+# ----------------------------------------------------------------
+# Common flip constants
+# ----------------------------------------------------------------
 PILLOW_FLIP_CODES = {
     "horizontal": Image.FLIP_LEFT_RIGHT,
     "vertical": Image.FLIP_TOP_BOTTOM
@@ -47,6 +56,9 @@ PILLOW_FLIP_CODES = {
 CV2_FLIP_CODES = {"horizontal": 1, "vertical": 0}
 TENSOR_FLIP_CODES = {"horizontal": 0, "vertical": 1}
 
+# ----------------------------------------------------------------
+# Temporarily useless note
+# ----------------------------------------------------------------
 # def batch_enable(operation_func):
 #     @functools.wraps(operation_func)
 #     def batch_apply(*args, **kwargs):
@@ -61,6 +73,9 @@ TENSOR_FLIP_CODES = {"horizontal": 0, "vertical": 1}
 #             return m.group(1)
 
 
+# ----------------------------------------------------------------
+# Basic class for common operations on image(s)
+# ----------------------------------------------------------------
 class BaseOperation(object):
     def __init__(self) -> None:
         super(BaseOperation, self).__init__()
@@ -326,11 +341,11 @@ class BaseOperation(object):
                 w, h = img[0].size
             else:
                 raise TypeError(
-                    f"img must be type of {paddle.Tensor} or {List[np.ndarray, Image.Image]}, but got {type(img)}."
+                    f"img must be type of {paddle.Tensor} or {List[Union[np.ndarray, Image.Image]]}, but got {type(img)}."
                 )
         else:
             raise TypeError(
-                f"img must be type of {paddle.Tensor} or {List[np.ndarray, Image.Image]}, but got {type(img)}."
+                f"img must be type of {paddle.Tensor} or {List[Union[np.ndarray, Image.Image]]}, but got {type(img)}."
             )
         return (w, h)
 
