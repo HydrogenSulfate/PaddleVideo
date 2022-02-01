@@ -172,6 +172,7 @@ def train_model(cfg,
 
         record_list = build_record(cfg.MODEL)
         tic = time.time()
+        len_train_loader = len(train_loader)
         for i, data in enumerate(train_loader):
             """Next two line of code only used in test_tipc,
             ignore it most of the time"""
@@ -242,9 +243,10 @@ def train_model(cfg,
             tic = time.time()
 
             if i % cfg.get("log_interval", 10) == 0:
-                ips = "ips: {:.5f} instance/sec.".format(
+                ips_str = "ips: {:.5f} instance/sec.".format(
                     batch_size / record_list["batch_time"].val)
-                log_batch(record_list, i, epoch + 1, cfg.epochs, "train", ips)
+                log_batch(record_list, i, len_train_loader, epoch + 1,
+                          cfg.epochs, "train", ips_str)
 
             # learning rate iter step
             if cfg.OPTIMIZER.learning_rate.get("iter_step"):
@@ -254,10 +256,10 @@ def train_model(cfg,
         if not cfg.OPTIMIZER.learning_rate.get("iter_step"):
             lr.step()
 
-        ips = "avg_ips: {:.5f} instance/sec.".format(
+        ips_str = "avg_ips: {:.5f} instance/sec.".format(
             batch_size * record_list["batch_time"].count /
             record_list["batch_time"].sum)
-        log_epoch(record_list, epoch + 1, "train", ips)
+        log_epoch(record_list, epoch + 1, "train", ips_str)
 
         def evaluate(best):
             model.eval()
@@ -267,6 +269,7 @@ def train_model(cfg,
             tic = time.time()
             if parallel:
                 rank = dist.get_rank()
+            len_valid_loader = len(valid_loader)
             # single_gpu_test and multi_gpu_test
             for i, data in enumerate(valid_loader):
                 outputs = model(data, mode='valid')
@@ -283,9 +286,10 @@ def train_model(cfg,
                 tic = time.time()
 
                 if i % cfg.get("log_interval", 10) == 0:
-                    ips = "ips: {:.5f} instance/sec.".format(
+                    ips_str = "ips: {:.5f} instance/sec.".format(
                         valid_batch_size / record_list["batch_time"].val)
-                    log_batch(record_list, i, epoch + 1, cfg.epochs, "val", ips)
+                    log_batch(record_list, i, len_valid_loader, epoch + 1,
+                              cfg.epochs, "val", ips_str)
 
             if cfg.MODEL.framework == "FastRCNN":
                 if parallel:
@@ -295,10 +299,10 @@ def train_model(cfg,
                     for name, value in eval_res.items():
                         record_list[name].update(value, valid_batch_size)
 
-            ips = "avg_ips: {:.5f} instance/sec.".format(
+            ips_str = "avg_ips: {:.5f} instance/sec.".format(
                 valid_batch_size * record_list["batch_time"].count /
                 record_list["batch_time"].sum)
-            log_epoch(record_list, epoch + 1, "val", ips)
+            log_epoch(record_list, epoch + 1, "val", ips_str)
 
             best_flag = False
             if cfg.MODEL.framework == "FastRCNN" and (not parallel or

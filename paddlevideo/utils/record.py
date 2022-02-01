@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
 import paddle
 
@@ -108,7 +109,14 @@ class AverageMeter(object):
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
 
 
-def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
+def log_batch(metric_list,
+              batch_id,
+              batches_per_epoch,
+              epoch_id,
+              total_epoch,
+              mode,
+              ips_str,
+              show_eta=False):
     batch_cost = str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = str(metric_list['reader_time'].value) + ' sec,'
 
@@ -119,11 +127,24 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
     metric_str = ' '.join([str(v) for v in metric_values])
     epoch_str = "epoch:[{:>3d}/{:<3d}]".format(epoch_id, total_epoch)
     step_str = "{:s} step:{:<4d}".format(mode, batch_id)
-
-    logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+    info_str = "{:s} {:s} {:s} {:s} {:s} {}".format(
         coloring(epoch_str, "HEADER") if batch_id == 0 else epoch_str,
         coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-        coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'),
+        ips_str)
+    if show_eta:
+        # calculate training progress percentage within one epoch.
+        inner_process = (batch_id + 1) / (batches_per_epoch)
+        # calculate the eta of current epoch.
+        inner_eta = int(metric_list['batch_time'].sum *
+                        (1 - inner_process) / inner_process + 0.5)
+        # calculate the eta of total epoch(es).
+        global_eta = inner_eta / (batches_per_epoch -
+                                  (batch_id + 1)) * (total_epoch *
+                                                     batches_per_epoch)
+        # append eta string to the end.
+        info_str += " {}".format(timedelta(seconds=global_eta))
+    logger.info(info_str)
 
 
 def log_epoch(metric_list, epoch, mode, ips):
