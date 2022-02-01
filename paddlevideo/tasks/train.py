@@ -36,7 +36,8 @@ def train_model(cfg,
                 opt_level=None,
                 max_iters=None,
                 use_fleet=False,
-                profiler_options=None):
+                profiler_options=None,
+                show_eta=False):
     """Train model entry
 
     Args:
@@ -246,7 +247,7 @@ def train_model(cfg,
                 ips_str = "ips: {:.5f} instance/sec.".format(
                     batch_size / record_list["batch_time"].val)
                 log_batch(record_list, i, len_train_loader, epoch + 1,
-                          cfg.epochs, "train", ips_str)
+                          cfg.epochs, "train", ips_str, show_eta)
 
             # learning rate iter step
             if cfg.OPTIMIZER.learning_rate.get("iter_step"):
