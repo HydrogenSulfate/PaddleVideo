@@ -84,7 +84,10 @@ def parse_args():
                         type=bool,
                         default=False,
                         help='whether use npu.')
-
+    parser.add_argument(
+        '--show_eta',
+        action='store_true',
+        help='whether to print estimated time of arrival during training.')
     args = parser.parse_args()
     return args
 
@@ -124,7 +127,8 @@ def main():
                     use_amp=args.amp,
                     opt_level=args.opt_level,
                     max_iters=args.max_iters,
-                    profiler_options=args.profiler_options)
+                    profiler_options=args.profiler_options,
+                    show_eta=args.show_eta)
 
 
 if __name__ == '__main__':
