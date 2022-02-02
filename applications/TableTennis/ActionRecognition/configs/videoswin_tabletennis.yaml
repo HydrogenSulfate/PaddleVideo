@@ -57,27 +57,20 @@ PIPELINE: #PIPELINE field TODO.....
             backend: 'cv2'
         transform: #Mandotary, image transform operator.
             - Scale:
-                short_size: 256
-                fixed_ratio: False
-                keep_ratio: True
-                backend: 'cv2'
-                do_round: True
+                scale_size: 256
             - RandomResizedCrop:
-                backend: 'cv2'
             - Scale:
-                short_size: 224
-                fixed_ratio: False
+                scale_size: 224
                 keep_ratio: False
-                backend: 'cv2'
-                do_round: True
             - RandomFlip:
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
                 tensor_shape: [3, 1, 1]
                 inplace: True
+                scale_factor: 1
             - Image2Array:
-                data_format: 'cthw'
+                format_shape: 'CTHW'
     valid: #Mandatory, indicate the pipeline to deal with the validing data. associate to the 'paddlevideo/loader/pipelines/'
         decode:
             name: "FrameDecoder"
@@ -89,22 +82,17 @@ PIPELINE: #PIPELINE field TODO.....
             backend: 'cv2'
         transform: #Mandotary, image transform operator.
             - Scale:
-                short_size: 256
-                fixed_ratio: False
-                keep_ratio: True
-                backend: 'cv2'
-                do_round: True
+                scale_size: 256
             - CenterCrop:
                 target_size: 224
-                do_round: False
-                backend: 'cv2'
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
                 tensor_shape: [3, 1, 1]
                 inplace: True
+                scale_factor: 1
             - Image2Array:
-                data_format: 'cthw'
+                format_shape: 'CTHW'
     test:
         decode:
             name: "FrameDecoder"
@@ -116,21 +104,16 @@ PIPELINE: #PIPELINE field TODO.....
             backend: 'cv2'
         transform: #Mandotary, image transform operator.
             - Scale:
-                short_size: 256
-                fixed_ratio: False
-                keep_ratio: True
-                backend: 'cv2'
-                do_round: True
+                scale_size: 256
             - UniformCrop:
                 target_size: 224
-                backend: 'cv2'
             - Normalization:
                 mean: [123.675, 116.28, 103.53]
                 std: [58.395, 57.12, 57.375]
                 tensor_shape: [3, 1, 1]
                 inplace: True
             - Image2Array:
-                data_format: 'cthw'
+                format_shape: 'CTHW'
 OPTIMIZER:
     name: 'AdamW'
     beta1: 0.9
