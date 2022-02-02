@@ -141,7 +141,7 @@ def train_model(cfg,
         optimizer.set_state_dict(resume_opt_dict)
         logger.info("Resume from checkpoint: {}".format(filename))
 
-    # Finetune:
+    # Finetune
     if weights:
         assert resume_epoch == 0, f"Conflict occurs when finetuning, please switch resume function off by setting resume_epoch to 0 or not indicating it."
         model_dict = load(weights)
