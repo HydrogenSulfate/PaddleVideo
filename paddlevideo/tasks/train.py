@@ -28,26 +28,30 @@ from ..solver import build_lr, build_optimizer
 from ..utils import do_preciseBN
 
 
-def train_model(cfg,
-                weights=None,
-                parallel=True,
-                validate=True,
-                use_amp=False,
-                opt_level=None,
-                max_iters=None,
-                use_fleet=False,
-                profiler_options=None,
-                show_eta=False):
+def train_model(cfg: dict,
+                weights: str = None,
+                parallel: bool = True,
+                validate: bool = True,
+                use_amp: bool = False,
+                opt_level: str = None,
+                max_iters: int = None,
+                use_fleet: bool = False,
+                profiler_options: str = None,
+                show_eta: bool = False):
     """Train model entry
 
     Args:
-        cfg (dict): configuration.
-        weights (str): weights path for finetuning.
-        parallel (bool): Whether multi-cards training. Default: True.
-        validate (bool): Whether to do evaluation. Default: False.
-        amp (bool): Whether to use automatic mixed precision during training. Default: False.
-        use_fleet (bool):
-        profiler_options (str): Activate the profiler function Default: None.
+        cfg (dict): configuration
+        weights (str, optional): weights path for finetuning. Defaults to None.
+        parallel (bool, optional): Whether multi-cards training. Defaults to True.
+        validate (bool, optional): Whether to do evaluation. Defaults to True.
+        use_amp (bool, optional): Whether to use automatic mixed precision during training. Defaults to False.
+        opt_level (str, optional): opt level used in autocast. Defaults to None.
+        max_iters (int, optional): max running iters in an epoch. Defaults to None.
+        use_fleet (bool, optional): Whether to use fleet. Defaults to False.
+        profiler_options (str, optional): configuration for the profiler function. Defaults to None.
+        show_eta (bool, optional): [description]. Defaults to False.
+
     """
     if use_fleet:
         fleet.init(is_collective=True)
