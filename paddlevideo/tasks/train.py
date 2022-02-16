@@ -210,8 +210,9 @@ def train_model(cfg: dict,
                         scaler.minimize(optimizer, scaled)
                         optimizer.clear_grad()
                 else:  # general case
-                    # 4.2 backward
+                    # Loss scaling
                     scaled = scaler.scale(avg_loss)
+                    # 4.2 backward
                     scaled.backward()
                     # 4.3 minimize
                     scaler.minimize(optimizer, scaled)
