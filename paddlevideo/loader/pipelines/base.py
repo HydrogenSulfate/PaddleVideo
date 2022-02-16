@@ -95,11 +95,11 @@ class BaseOperation(object):
     @staticmethod
     def _compute_length(size: _IMSIZE, scale_factor: Union[int,
                                                            float]) -> _IMSIZE:
-        """Compute the new scale size by input size and scale factor
+        """Compute the new scale size by input size and scale factor.
 
         Args:
-            size (_IMSIZE): input size, including width and height
-            scale_factor (Union[int, float]): scale factor
+            size (_IMSIZE): input size, including width and height.
+            scale_factor (Union[int, float]): scale factor.
         """
         if len(size) != 2:
             raise ValueError(f"len(size) must be 2, but got {len(size)}")
@@ -117,8 +117,8 @@ class BaseOperation(object):
            called only when need keep ratio.
 
         Args:
-            old_size (IMSIZE): original size, contains (w, h)
-            scale (_SCALE): scale params
+            old_size (IMSIZE): original size, contains (w, h).
+            scale (_SCALE): scale params.
             return_scale (bool, optional): Whether return scale \
                 factor together with scale size. Defaults to False.
 
@@ -153,16 +153,16 @@ class BaseOperation(object):
                   size: _IMSIZE,
                   interpolation: str,
                   to_numpy: bool = False) -> _IMTYPE:
-        """Apply resize function to input image(s)
+        """Apply resize function to input image(s).
 
         Args:
-            img (_IMAGE): input image(s)
-            size (_IMSIZE): target size which resized to, which contains (w, h)
-            interpolation (str): interpolation method for resize function
+            img (_IMAGE): input image(s).
+            size (_IMSIZE): target size which resized to, which contains (w, h).
+            interpolation (str): interpolation method for resize function.
             to_numpy (bool, optional): Whether convert to numpy.ndarray after resize. Defaults to False.
 
         Returns:
-            _IMAGE: Resized images(s)
+            _IMAGE: Resized images(s).
         """
         if self.isNumpy(img):
             return cv2.resize(src=img,
@@ -193,15 +193,15 @@ class BaseOperation(object):
                 img: _IMTYPE,
                 direction: str = "horizontal",
                 inplace: bool = False) -> _IMTYPE:
-        """Apply flip function to input image(s)
+        """Apply flip function to input image(s).
 
         Args:
-            img (_IMAGE): input image(s)
+            img (_IMAGE): input image(s).
             direction (str, optional): Direction of flip op. Defaults to "horizontal".
             inplace (bool, optional): Whether use inplace op when flip(if available). Defaults to False.
 
         Returns:
-            _IMAGE: Fliped image(s)
+            _IMAGE: Fliped image(s).
         """
         if self.isNumpy(img):
             if inplace:
@@ -224,14 +224,14 @@ class BaseOperation(object):
                 f"input images must be {_IMTYPE}, but got {type(img)}.")
 
     def im_crop(self, img: _IMTYPE, box: _BOX) -> _IMTYPE:
-        """Apply crop function to input image(s)
+        """Apply crop function to input image(s).
 
         Args:
-            img (_IMAGE): input image(s)
-            box (_BOX): coords of crop box, which is (left, top, right, bottom)
+            img (_IMAGE): input image(s).
+            box (_BOX): coords of crop box, which is (left, top, right, bottom).
 
         Returns:
-            _IMAGE: Croped img
+            _IMAGE: Croped img.
         """
         left, top, right, bottom = box
         if self.isNumpy(img):
@@ -255,14 +255,14 @@ class BaseOperation(object):
         """Apply normalization to an single image.
 
         Args:
-            img (_IMAGE): input image, image.ndim must be 3.
+            img (np.ndarray): input image, image.ndim must be 3.
             mean (np.ndarray): mean value array to subtract.
             std (np.ndarray): std value to divide.
             inplace (bool, optional): Whether use inplace op when normlize(if available). Defaults to False.
             to_bgr (bool, optional): Whether to convert channels from RGB to BGR(inplace, only supprt with cv2). Default to False.
 
         Returns:
-            _IMAGE: Normalized image(s)
+            np.ndarray: Normalized image(s).
         """
         if self.isNumpy(img):
             h, w, c = img.shape
@@ -272,7 +272,7 @@ class BaseOperation(object):
                         f"img's data type must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
-                        f"the last channels must be 3 when to_bgr=True, but shape of img is [{h},{w},{c}]."
+                        f"expect the channels to be 3 when to_bgr=True, but channels of img is [{c}]."
                     )
                 cv2.cvtColor(img, cv2.COLOR_RGB2BGR, img)  # inplace convert
             if inplace:
@@ -281,7 +281,7 @@ class BaseOperation(object):
                         f"img's data type must be uint8, but got {img.dtype}.")
                 if c != 3:
                     raise ValueError(
-                        f"the last channels must be 3 when inplace=True, but shape of img is [{h},{w},{c}]."
+                        f"expect the channels to be 3 when inplace=True, but channels of img is [{c}]."
                     )
                 mean = mean.reshape(1, -1).astype("float64")  # [1, 3]
                 std_inv = 1 / (std.reshape(1, -1).astype("float64"))  # [1, 3]

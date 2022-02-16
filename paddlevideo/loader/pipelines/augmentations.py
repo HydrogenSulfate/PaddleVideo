@@ -68,7 +68,7 @@ class Scale(BaseOperation):
                 f"keep_ratio can't be true when fixed_ratio is provided")
 
     def __call__(self, results: Dict[str, Any]) -> Dict[str, Any]:
-        """Apply scale operations on images
+        """Apply scale operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -116,7 +116,7 @@ class RandomCrop(BaseOperation):
         self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply randomcrop operations on images
+        """Apply randomcrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -198,7 +198,7 @@ class RandomResizedCrop(BaseOperation):
         return x_offset, y_offset, x_offset + crop_size, y_offset + crop_size
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply randomresizedcrop operations on images
+        """Apply randomresizedcrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -232,7 +232,7 @@ class CenterCrop(BaseOperation):
         self.target_size = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply centercrop operations on images
+        """Apply centercrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -290,7 +290,7 @@ class MultiScaleCrop(BaseOperation):
         self.interpolation = interpolation
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply multiscalecrop operations on images
+        """Apply multiscalecrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -386,7 +386,7 @@ class RandomFlip(BaseOperation):
         self.direction = direction
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply randomflip operations on images
+        """Apply randomflip operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -423,7 +423,7 @@ class Image2Array(BaseOperation):
         self.format_shape = format_shape
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply image2array operations on images
+        """Apply image2array operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -489,7 +489,7 @@ class Normalization(BaseOperation):
         self.inplace = inplace
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply normalization operations on images
+        """Apply normalization operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -518,9 +518,13 @@ class Normalization(BaseOperation):
 class JitterScale(BaseOperation):
     """
     Scale image, while the target short size is randomly select between min_size and max_size.
+
     Args:
-        min_size: Lower bound for random sampler.
-        max_size: Higher bound for random sampler.
+         min_size (int): Lower bound for random sampler.
+            max_size (int): Higher bound for random sampler.
+            short_cycle_factors (_ARRAY, optional): short cycle factors. Defaults to [0.5, 0.7071].
+            default_min_size (int, optional): default min size. Defaults to 256.
+            interpolation (str, optional): interpolation method. Defaults to 'bilinear'.
     """
     def __init__(self,
                  min_size: int,
@@ -537,7 +541,7 @@ class JitterScale(BaseOperation):
         self.orig_min_size = min_size
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply jitterscale operations on images
+        """Apply jitterscale operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -605,7 +609,7 @@ class MultiCrop(BaseOperation):
         self.test_mode = test_mode
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply multicrop operations on images
+        """Apply multicrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -673,14 +677,14 @@ class PackOutput(BaseOperation):
     """In slowfast model, we want to get slow pathway from fast pathway based on alpha factor.
 
     Args:
-        alpha (int): temporal length of fast/slow
+        alpha (int): temporal length of fast/slow.
     """
     def __init__(self, alpha: int):
         super(PackOutput, self).__init__()
         self.alpha = alpha
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply packoutput operations on images
+        """Apply packoutput operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -710,10 +714,10 @@ class PackOutput(BaseOperation):
 
 @PIPELINES.register()
 class GroupFullResSample(BaseOperation):
-    """GroupFullResSample
+    """GroupFullResSample.
 
     Args:
-        crop_size (int): crop size
+        crop_size (int): crop size.
         flip (bool, optional): Whether take extra flip. Defaults to False.
     """
     def __init__(self, crop_size: int, flip: bool = False):
@@ -722,7 +726,7 @@ class GroupFullResSample(BaseOperation):
         self.flip = flip
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply groupfullressample operations on images
+        """Apply groupfullressample operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -770,14 +774,14 @@ class TenCrop(BaseOperation):
         and then flip the cropping result to get 10 cropped images, which can make the prediction result more robust.
 
     Args:
-        target_size (int): (target_size, target_size) of target size for crop
+        target_size (int): (target_size, target_size) of target size for crop.
     """
     def __init__(self, target_size: int):
         super(TenCrop, self).__init__()
         self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply tencrop operations on images
+        """Apply tencrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -823,7 +827,7 @@ class UniformCrop(BaseOperation):
         self.target_size: _IMSIZE = (target_size, target_size)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply uniformcrop operations on images
+        """Apply uniformcrop operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -861,12 +865,12 @@ class UniformCrop(BaseOperation):
 
 @PIPELINES.register()
 class GroupResize(BaseOperation):
-    """Resize images in image pyramid
+    """Resize images in image pyramid.
 
     Args:
-        height (int): image height
-        width (int): image width
-        scale (int): number of scales in image pyramid
+        height (int): image height.
+        width (int): image width.
+        scale (int): number of scales in image pyramid.
         K (_ARRAY): Camera intrinsics matrix.
         mode (str, optional): [description]. Defaults to 'train'.
         interpolation (str, optional): Interpolation method. Defaults to 'lanczos'.
@@ -892,7 +896,7 @@ class GroupResize(BaseOperation):
                 interpolation=interpolation)
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply groupresize operations on images
+        """Apply groupresize operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -952,7 +956,7 @@ class ColorJitter(BaseOperation):
         self.prob = prob
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply colorjitter operations on images
+        """Apply colorjitter operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -988,7 +992,7 @@ class ColorJitter(BaseOperation):
 
 @PIPELINES.register()
 class GroupRandomFlip(BaseOperation):
-    """GroupRandomFlip
+    """GroupRandomFlip.
 
     Args:
         prob (float, optional): Whether do flip with probability prob. Defaults to 0.5.
@@ -1000,7 +1004,7 @@ class GroupRandomFlip(BaseOperation):
         self.direction = direction
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply grouprandomflip operations on images
+        """Apply grouprandomflip operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
@@ -1032,7 +1036,7 @@ class ToArray(BaseOperation):
         pass
 
     def __call__(self, results: _RESULT) -> _RESULT:
-        """Apply toarray operations on images
+        """Apply toarray operations on images.
 
         Args:
             results (Dict[str, Any]): Data processed on the pipeline which is as input for the next operation.
