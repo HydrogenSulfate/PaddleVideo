@@ -143,7 +143,7 @@ def log_batch(metric_list,
                                   (batch_id + 1)) * (total_epoch *
                                                      batches_per_epoch)
         # append eta string to the end.
-        info_str += " {}".format(timedelta(seconds=global_eta))
+        info_str += " eta: {}".format(timedelta(seconds=global_eta))
     logger.info(info_str)
 
 
