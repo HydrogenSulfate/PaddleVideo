@@ -18,9 +18,9 @@ import time
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
-
 from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
+
 from ..loader.builder import build_dataloader, build_dataset
 from ..metrics.ava_utils import collect_results_cpu
 from ..modeling.builder import build_model
@@ -41,7 +41,7 @@ def train_model(cfg: dict,
     """Train model entry
 
     Args:
-        cfg (dict): configuration
+        cfg (dict): configuration.
         weights (str, optional): weights path for finetuning. Defaults to None.
         parallel (bool, optional): whether multi-cards training. Defaults to True.
         validate (bool, optional): whether to do evaluation. Defaults to True.
