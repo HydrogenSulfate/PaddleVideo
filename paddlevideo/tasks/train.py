@@ -43,14 +43,14 @@ def train_model(cfg: dict,
     Args:
         cfg (dict): configuration
         weights (str, optional): weights path for finetuning. Defaults to None.
-        parallel (bool, optional): Whether multi-cards training. Defaults to True.
-        validate (bool, optional): Whether to do evaluation. Defaults to True.
-        use_amp (bool, optional): Whether to use automatic mixed precision during training. Defaults to False.
+        parallel (bool, optional): whether multi-cards training. Defaults to True.
+        validate (bool, optional): whether to do evaluation. Defaults to True.
+        use_amp (bool, optional): whether to use automatic mixed precision during training. Defaults to False.
         opt_level (str, optional): opt level used in autocast. Defaults to None.
         max_iters (int, optional): max running iters in an epoch. Defaults to None.
-        use_fleet (bool, optional): Whether to use fleet. Defaults to False.
+        use_fleet (bool, optional): whether to use fleet. Defaults to False.
         profiler_options (str, optional): configuration for the profiler function. Defaults to None.
-        show_eta (bool, optional): [description]. Defaults to False.
+        show_eta (bool, optional): whether to show estimated time of arrival when log batch stats. Defaults to False.
 
     """
     if use_fleet:
