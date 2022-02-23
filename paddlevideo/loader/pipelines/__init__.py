@@ -29,6 +29,7 @@ from .multimodal import FeaturePadding, RandomCap, RandomMask, Tokenize
 from .sample import Sampler, SamplerPkl
 from .sample_ava import *
 from .segmentation import MultiNorm, MultiRestrictSize
+from .segmentation_pipline import SegmentationSampler
 from .skeleton_pipeline import AutoPadding, Iden, SkeletonNorm
 
 __all__ = [
@@ -40,5 +41,5 @@ __all__ = [
     'RandomCap', 'JitterScale', 'Iden', 'VideoMix', 'ColorJitter', 'RandomFlip',
     'ToArray', 'FeaturePadding', 'GetMatchMap', 'GroupRandomFlip', 'MultiCrop',
     'SFMRI_DecodeSampler', 'MultiRestrictSize', 'MultiNorm',
-    'RandomResizedCrop', 'SamplerPkl'
+    'RandomResizedCrop', 'SamplerPkl', 'SegmentationSampler'
 ]
