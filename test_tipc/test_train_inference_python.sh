@@ -27,9 +27,10 @@ train_batch_value=$(func_parser_value "${lines[8]}")
 pretrain_model_key=$(func_parser_key "${lines[9]}")
 pretrain_model_value=$(func_parser_value "${lines[9]}")
 train_model_name=$(func_parser_value "${lines[10]}")
-train_infer_video_dir=$(func_parser_value "${lines[11]}")
 train_param_key1=$(func_parser_key "${lines[12]}")
 train_param_value1=$(func_parser_value "${lines[12]}")
+train_param_key2=$(func_parser_key "${lines[11]}")
+train_param_value2=$(func_parser_value "${lines[11]}")
 
 trainer_list=$(func_parser_value "${lines[14]}")
 trainer_norm=$(func_parser_key "${lines[15]}")
@@ -144,16 +145,16 @@ function func_inference(){
     for use_gpu in ${use_gpu_list[*]}; do
         if [ ${use_gpu} = "False" ] || [ ${use_gpu} = "cpu" ]; then
             for use_mkldnn in ${use_mkldnn_list[*]}; do
-                if [ ${use_mkldnn} = "False" ] && [ ${_flag_quant} = "True" ]; then
+                if [[ ${use_mkldnn} = "False" ]] && [[ ${_flag_quant} = "True" ]]; then
                     continue
                 fi
                 for threads in ${cpu_threads_list[*]}; do
                     for batch_size in ${batch_size_list[*]}; do
                         for precision in ${precision_list[*]}; do
-                            if [ ${use_mkldnn} = "False" ] && [ ${precision} = "fp16" ]; then
+                            if [[ ${use_mkldnn} = "False" ]] && [[ ${precision} = "fp16" ]]; then
                                 continue
                             fi # skip when enable fp16 but disable mkldnn
-                            if [ ${_flag_quant} = "True" ] && [ ${precision} != "int8" ]; then
+                            if [[ ${_flag_quant} = "True" ]] && [[ ${precision} != "int8" ]]; then
                                 continue
                             fi # skip when quant model inference but precision is not int8
                             set_precision=$(func_set_params "${precision_key}" "${precision}")
@@ -184,10 +185,10 @@ function func_inference(){
                     if [[ ${_flag_quant} = "False" ]] && [[ ${precision} =~ "int8" ]]; then
                         continue
                     fi
-                    if [[ ${precision} =~ "fp16" || ${precision} =~ "int8" ]] && [ ${use_trt} = "False" ]; then
+                    if [[ ${precision} =~ "fp16" || ${precision} =~ "int8" ]] && [[ ${use_trt} = "False" ]]; then
                         continue
                     fi
-                    if [[ ${use_trt} = "False" || ${precision} =~ "int8" ]] && [ ${_flag_quant} = "True" ]; then
+                    if [[ ${use_trt} = "False" || ${precision} =~ "int8" ]] && [[ ${_flag_quant} = "True" ]]; then
                         continue
                     fi
                     for batch_size in ${batch_size_list[*]}; do
@@ -283,8 +284,8 @@ else
             env=" "
         fi
         for autocast in ${autocast_list[*]}; do
-            if [ ${autocast} = "amp" ]; then
-                set_amp_config="Global.use_amp=True Global.scale_loss=1024.0 Global.use_dynamic_loss_scaling=True"
+            if [ ${autocast} = "fp16" ]; then
+                set_amp_config="--amp"
             else
                 set_amp_config=" "
             fi
@@ -308,6 +309,10 @@ else
                     run_export=${export_value2}
                 else
                     run_train=${norm_trainer}
+                    if [[ ${MODE} != "benchmark_train" ]] && [[ ! ${MODE} =~ "whole_train" ]]; then
+                        # 训练参数末尾加上--max_iters=30和--log_interval=1，以便运行并输出足量数据
+                        run_train=${run_train}" --max_iters=30"
+                    fi
                     run_export=${norm_export}
                 fi
 
@@ -332,6 +337,11 @@ else
                     train_param_value1=""
                 fi
                 set_train_params1=$(func_set_params "${train_param_key1}" "${train_param_value1}")
+                if [[ $MODE =~ "whole_train" ]]; then
+                    train_param_key2=""
+                    train_param_value2=""
+                fi
+                set_train_params2=$(func_set_params "${train_param_key2}" "${train_param_value2}")
                 set_use_gpu=$(func_set_params "${train_use_gpu_key}" "${train_use_gpu}")
                 if [ ${#ips} -le 26 ];then
                     save_log="${LOG_PATH}/${trainer}_gpus_${gpu}_autocast_${autocast}"
@@ -351,11 +361,11 @@ else
 
                 set_save_model=$(func_set_params "${save_model_key}" "${save_log}")
                 if [ ${#gpu} -le 2 ];then  # train with cpu or single gpu
-                    cmd="${python} ${run_train} ${set_use_gpu}  ${set_save_model} ${set_epoch} ${set_pretrain} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config} "
+                    cmd="${python} ${run_train} ${set_use_gpu}  ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize} ${set_train_params1} ${set_train_params2} ${set_amp_config} "
                 elif [ ${#ips} -le 26 ];then  # train with multi-gpu
-                    cmd="${python} -B -m paddle.distributed.launch --gpus=\"${gpu}\" ${run_train} ${set_use_gpu} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config}"
+                    cmd="${python} -B -m paddle.distributed.launch --gpus=\"${gpu}\" ${run_train} ${set_use_gpu} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize} ${set_train_params1} ${set_train_params2} ${set_amp_config}"
                 else     # train with multi-machine
-                    cmd="${python} -B -m paddle.distributed.launch --ips=${ips} --gpus=\"${gpu}\" ${run_train} ${set_use_gpu} ${set_save_model} ${set_pretrain} ${set_epoch} ${set_autocast} ${set_batchsize} ${set_train_params1} ${set_amp_config}"
+                    cmd="${python} -B -m paddle.distributed.launch --ips=${ips} --gpus=\"${gpu}\" ${run_train} ${set_use_gpu} ${set_save_model} ${set_pretrain} ${set_epoch} ${set_batchsize} ${set_train_params1} ${set_train_params2} ${set_amp_config}"
                 fi
 
                 # run train
@@ -397,7 +407,7 @@ else
                     else
                         infer_model_dir=${save_infer_path}
                     fi
-                    func_inference "${python}" "${inference_py}" "${infer_model_dir}" "${LOG_PATH}" "${train_infer_video_dir}" "${flag_quant}"
+                    func_inference "${python}" "${inference_py}" "${infer_model_dir}" "${LOG_PATH}" "${flag_quant}"
 
                     eval "unset CUDA_VISIBLE_DEVICES"
                 fi

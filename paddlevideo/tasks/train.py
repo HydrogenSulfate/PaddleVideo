@@ -21,7 +21,6 @@ import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
 from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
                                load, log_batch, log_epoch, mkdir, save)
-
 from ..loader.builder import build_dataloader, build_dataset
 from ..metrics.ava_utils import collect_results_cpu
 from ..modeling.builder import build_model
@@ -41,12 +40,14 @@ def train_model(cfg,
 
     Args:
         cfg (dict): configuration.
-        weights (str): weights path for finetuning.
-        parallel (bool): Whether multi-cards training. Default: True.
-        validate (bool): Whether to do evaluation. Default: False.
-        amp (bool): Whether to use automatic mixed precision during training. Default: False.
-        use_fleet (bool):
-        profiler_options (str): Activate the profiler function Default: None.
+        weights (str, optional): weights path for finetuning. Defaults to None.
+        parallel (bool, optional): whether multi-cards training. Defaults to True.
+        validate (bool, optional): whether to do evaluation. Defaults to True.
+        amp (bool, optional): whether to use automatic mixed precision during training. Defaults to False.
+        max_iters (int, optional): max running iters in an epoch. Defaults to None.
+        use_fleet (bool, optional): whether to use fleet. Defaults to False.
+        profiler_options (str, optional): configuration for the profiler function. Defaults to None.
+
     """
     if use_fleet:
         fleet.init(is_collective=True)
@@ -98,7 +99,7 @@ def train_model(cfg,
         model = paddle.DataParallel(model)
 
     if use_fleet:
-        model = paddle.distributed_model(model)
+        model = fleet.distributed_model(model)
 
     # 2. Construct dataset and dataloader
     train_dataset = build_dataset((cfg.DATASET.train, cfg.PIPELINE.train))
@@ -194,8 +195,9 @@ def train_model(cfg,
                         scaler.minimize(optimizer, scaled)
                         optimizer.clear_grad()
                 else:  # general case
-                    # 4.2 backward
+                    # Loss scaling
                     scaled = scaler.scale(avg_loss)
+                    # 4.2 backward
                     scaled.backward()
                     # 4.3 minimize
                     scaler.minimize(optimizer, scaled)
@@ -262,6 +264,7 @@ def train_model(cfg,
             #single_gpu_test and multi_gpu_test
             for i, data in enumerate(valid_loader):
                 outputs = model(data, mode='valid')
+
                 if cfg.MODEL.framework == "FastRCNN":
                     results.extend(outputs)
 
@@ -301,7 +304,7 @@ def train_model(cfg,
                 return best, best_flag
 
             # forbest2, cfg.MODEL.framework != "FastRCNN":
-            for top_flag in ['hit_at_one', 'top1', 'rmse']:
+            for top_flag in ['hit_at_one', 'top1', 'rmse', "F1@0.50"]:
                 if record_list.get(top_flag):
                     if top_flag != 'rmse' and record_list[top_flag].avg > best:
                         best = record_list[top_flag].avg
@@ -342,6 +345,10 @@ def train_model(cfg,
                     logger.info(
                         f"Already save the best model (rmse){int(best * 10000) / 10000}"
                     )
+                elif cfg.MODEL.framework in ['MSTCN', 'ASRF']:
+                    logger.info(
+                        f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
+                    )
                 else:
                     logger.info(
                         f"Already save the best model (top1 acc){int(best * 10000) / 10000}"
@@ -352,10 +359,10 @@ def train_model(cfg,
             save(
                 optimizer.state_dict(),
                 osp.join(output_dir,
-                         model_name + f"_epoch_{epoch+1:05d}.pdopt"))
+                         model_name + f"_epoch_{epoch + 1:05d}.pdopt"))
             save(
                 model.state_dict(),
                 osp.join(output_dir,
-                         model_name + f"_epoch_{epoch+1:05d}.pdparams"))
+                         model_name + f"_epoch_{epoch + 1:05d}.pdparams"))
 
     logger.info(f'training {model_name} finished')
