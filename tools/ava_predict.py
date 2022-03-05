@@ -18,11 +18,12 @@ import os, sys
 import copy as cp
 import cv2
 import math
-
 try:
     import ppdet
-except:
-    print("No ppdet")
+except ImportError as e:
+    print(
+        f"{e}, [paddledet] package and it's dependencies is required for AVA.")
+
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(__dir__, '../')))
 
