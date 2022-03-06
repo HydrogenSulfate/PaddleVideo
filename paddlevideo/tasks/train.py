@@ -18,8 +18,11 @@ import time
 import paddle
 import paddle.distributed as dist
 import paddle.distributed.fleet as fleet
-from paddlevideo.utils import (add_profiler_step, build_record, get_logger,
-                               load, log_batch, log_epoch, mkdir, save)
+from paddlevideo.utils import (add_profiler_step, build_best_meter,
+                               build_record, get_logger, load, log_batch,
+                               log_epoch, mkdir, save)
+from paddlevideo.utils.record import BestMeter
+
 from ..loader.builder import build_dataloader, build_dataset
 from ..metrics.ava_utils import collect_results_cpu
 from ..modeling.builder import build_model
@@ -165,7 +168,7 @@ def train_model(cfg: dict,
         assert opt_level is None, f"opt_level can only be None when training in fp32 mode."
         logger.info(f"Training with fp32 mode.")
 
-    best = 0.0
+    best = build_best_meter(cfg)
     for epoch in range(0, cfg.epochs):
         if epoch < resume_epoch:
             logger.info(
@@ -266,7 +269,7 @@ def train_model(cfg: dict,
             record_list["batch_time"].sum)
         log_epoch(record_list, epoch + 1, "train", ips_str)
 
-        def evaluate(best):
+        def evaluate(best: BestMeter):
             model.eval()
             results = []
             record_list = build_record(cfg.MODEL)
@@ -313,21 +316,14 @@ def train_model(cfg: dict,
             best_flag = False
             if cfg.MODEL.framework == "FastRCNN" and (not parallel or
                                                       (parallel and rank == 0)):
-                if record_list["mAP@0.5IOU"].val > best:
-                    best = record_list["mAP@0.5IOU"].val
-                    best_flag = True
+                best_flag = best.update(record_list["mAP@0.5IOU"].val)
                 return best, best_flag
 
             # forbest2, cfg.MODEL.framework != "FastRCNN":
             for top_flag in ['hit_at_one', 'top1', 'rmse', "F1@0.50"]:
                 if record_list.get(top_flag):
-                    if top_flag != 'rmse' and record_list[top_flag].avg > best:
-                        best = record_list[top_flag].avg
-                        best_flag = True
-                    elif top_flag == 'rmse' and (
-                            best == 0.0 or record_list[top_flag].avg < best):
-                        best = record_list[top_flag].avg
-                        best_flag = True
+                    best_flag = best.update(record_list[top_flag].avg)
+                return best, best_flag
 
             return best, best_flag
 
@@ -349,25 +345,7 @@ def train_model(cfg: dict,
                      osp.join(output_dir, model_name + "_best.pdopt"))
                 save(model.state_dict(),
                      osp.join(output_dir, model_name + "_best.pdparams"))
-                if model_name == "AttentionLstm":
-                    logger.info(
-                        f"Already save the best model (hit_at_one){best}")
-                elif cfg.MODEL.framework == "FastRCNN":
-                    logger.info(
-                        f"Already save the best model (mAP@0.5IOU){int(best * 10000) / 10000}"
-                    )
-                elif cfg.MODEL.framework == "DepthEstimator":
-                    logger.info(
-                        f"Already save the best model (rmse){int(best * 10000) / 10000}"
-                    )
-                elif cfg.MODEL.framework in ['MSTCN', 'ASRF']:
-                    logger.info(
-                        f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
-                    )
-                else:
-                    logger.info(
-                        f"Already save the best model (top1 acc){int(best * 10000) / 10000}"
-                    )
+                logger.info(f"Already save the best model {best}")
 
         # 6. Save model and optimizer
         if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1:

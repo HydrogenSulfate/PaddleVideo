@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
+from http.client import INSUFFICIENT_STORAGE
+from typing import Optional, Union
 
 import paddle
 
@@ -21,7 +23,9 @@ from .logger import coloring, get_logger
 
 logger = get_logger("paddlevideo")
 
-__all__ = ['AverageMeter', 'build_record', 'log_batch', 'log_epoch']
+__all__ = [
+    'AverageMeter', 'build_record', 'build_best_meter', 'log_batch', 'log_epoch'
+]
 
 
 def build_record(cfg):
@@ -29,7 +33,7 @@ def build_record(cfg):
         ("loss", AverageMeter('loss', '7.5f')),
         ("lr", AverageMeter('lr', 'f', need_avg=False)),
     ]
-    if 'Recognizer1D' in cfg.framework:  #TODO: required specify str in framework
+    if 'Recognizer1D' in cfg.framework:  # TODO: required specify str in framework
         record_list.append(("hit_at_one", AverageMeter("hit_at_one", '.5f')))
         record_list.append(("perr", AverageMeter("perr", '.5f')))
         record_list.append(("gap", AverageMeter("gap", '.5f')))
@@ -109,6 +113,91 @@ class AverageMeter(object):
     @property
     def value(self):
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
+
+
+class BestMeter(object):
+    """Computes and stores the best and current value
+
+    Args:
+        name (str): Name of best_value.
+        decimals (Optional[int], optional): Number of digits to truncate
+            after the decimal point. Defaults to 4.
+        order (Optional[str], optional): Comparison rules, when order is '>',
+            the smaller value is better, when order is '<', the larger value is better
+    """
+    def __init__(self,
+                 name: str,
+                 decimals: Optional[int] = 4,
+                 order: str = '<') -> None:
+        assert isinstance(
+            decimals, int), f"decimals must be int, but got {type(decimals)}"
+        assert 0 < decimals <= 10, f"0 < decimals <= 10, but got {decimals}"
+        assert order in ['<', '>'], f"order must be '<' or '>', but got {order}"
+        assert isinstance(name, str)
+        self.name = name
+        self.trunc_factor = 10**decimals
+        self.order = order
+        self.best_value = 0.0
+
+    def reset(self) -> None:
+        """reset best value.
+        """
+        self.best_value = 0.0
+
+    def update(self, val: Union[float, int]) -> bool:
+        """update best_value.
+
+        Args:
+            val (Union[float, int]): val (Union[float, int]): Value of an certain metric.
+
+        Returns:
+            bool: Whether value is better than self.best_value.
+        """
+        if isinstance(val, paddle.Tensor):
+            val = val.item()
+
+        better_flag = False
+        if self.order == '<':
+            better_flag = self.best_value < val
+        else:
+            better_flag = self.best_value > val
+        if better_flag:
+            self.best_value = val
+        return better_flag
+
+    def __reprer__(self) -> str:
+        """return truncated best value.
+
+        Returns:
+            float: truncated best value.
+        """
+        return f"({self.best_name}){str(int(self.best_value * self.trunc_factor) / self.trunc_factor)}"
+
+    @property
+    def value(self) -> float:
+        """Return raw best value
+
+        Returns:
+            float: raw best value.
+        """
+        return self.best_value
+
+
+def build_best_meter(cfg) -> BestMeter:
+    if 'Recognizer1D' in cfg.framework:
+        best_meter = BestMeter(name='hit_at_one', order='>')
+    elif 'Recognizer' in cfg.framework:
+        best_meter = BestMeter(name='top1', order='>')
+    elif 'FastRCNN' in cfg.framework:
+        best_meter = BestMeter(name='mAP@0.5IOU', order='>')
+    elif 'DepthEstimator' in cfg.framework:
+        best_meter = BestMeter(name='rmse', order='<')
+    elif 'MSTCN' in cfg.framework or 'ASRF' in cfg.framework:
+        best_meter = BestMeter(name='F1@0.50', order='>')
+    else:
+        raise NotImplementedError
+
+    return best_meter
 
 
 def log_batch(metric_list,
