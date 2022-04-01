@@ -109,7 +109,7 @@ class Identity(nn.Layer):
         return input
 
 
-def window_reverse(windows, window_size, B, D, H, W):
+def window_reverse(windows, window_size, B, D, H, W, C):
     """
     Args:
         windows: (B*num_windows, window_size, window_size, C)
@@ -124,7 +124,7 @@ def window_reverse(windows, window_size, B, D, H, W):
         B, D // window_size[0], H // window_size[1], W // window_size[2],
         window_size[0], window_size[1], window_size[2], -1
     ])
-    x = x.transpose([0, 1, 4, 2, 5, 3, 6, 7]).reshape([B, D, H, W, -1])
+    x = x.transpose([0, 1, 4, 2, 5, 3, 6, 7]).reshape([B, D, H, W, C])
     return x
 
 
@@ -227,19 +227,21 @@ class WindowAttention3D(nn.Layer):
         q, k, v = qkv[0], qkv[1], qkv[2]  # B_, nH, N, C
 
         q = q * self.scale
-        attn = q @ k.transpose([0, 1, 3, 2])
+        attn = paddle.matmul(q, k.transpose([0, 1, 3, 2]))
 
         relative_position_bias = self.relative_position_bias_table[
             self.relative_position_index[:N, :N].reshape([-1])].reshape(
                 [N, N, -1])  # Wd*Wh*Ww,Wd*Wh*Ww,nH
         relative_position_bias = relative_position_bias.transpose(
             [2, 0, 1])  # nH, Wd*Wh*Ww, Wd*Wh*Ww
-        attn = attn + relative_position_bias.unsqueeze(0)  # B_, nH, N, N
+        attn = paddle.add(attn,
+                          relative_position_bias.unsqueeze(0))  # B_, nH, N, N
 
         if mask is not None:
             nW = mask.shape[0]
-            attn = attn.reshape([B_ // nW, nW, self.num_heads, N, N
-                                 ]) + mask.unsqueeze(1).unsqueeze(0)
+            attn = paddle.add(
+                attn.reshape([B_ // nW, nW, self.num_heads, N, N]),
+                mask.unsqueeze(1).unsqueeze(0))
             attn = attn.reshape([-1, self.num_heads, N, N])
             attn = self.softmax(attn)
         else:
@@ -247,7 +249,7 @@ class WindowAttention3D(nn.Layer):
 
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose([0, 2, 1, 3]).reshape([B_, N, C])
+        x = paddle.matmul(attn, v).transpose([0, 2, 1, 3]).reshape([B_, N, C])
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -348,8 +350,8 @@ class SwinTransformerBlock3D(nn.Layer):
         attn_windows = self.attn(x_windows, mask=attn_mask)  # B*nW, Wd*Wh*Ww, C
         # merge windows
         attn_windows = attn_windows.reshape([-1, *(window_size + (C, ))])
-        shifted_x = window_reverse(attn_windows, window_size, B, Dp, Hp,
-                                   Wp)  # B D' H' W' C
+        shifted_x = window_reverse(attn_windows, window_size, B, Dp, Hp, Wp,
+                                   C)  # B D' H' W' C
         # reverse cyclic shift
         if any(i > 0 for i in shift_size):
             x = paddle.roll(shifted_x,
@@ -376,8 +378,8 @@ class SwinTransformerBlock3D(nn.Layer):
 
         shortcut = x
         x = self.forward_part1(x, mask_matrix)
-        x = shortcut + self.drop_path(x)
-        x = x + self.forward_part2(x)
+        x = paddle.add(shortcut, self.drop_path(x))
+        x = paddle.add(x, self.forward_part2(x))
 
         return x
 
@@ -442,7 +444,7 @@ def compute_mask(D, H, W, window_size, shift_size):
     attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
     # attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
     huns = -100.0 * paddle.ones_like(attn_mask)
-    attn_mask = huns * (attn_mask != 0).astype("float32")
+    attn_mask = paddle.multiply(huns, (attn_mask != 0).astype("float32"))
     return attn_mask
 
 
