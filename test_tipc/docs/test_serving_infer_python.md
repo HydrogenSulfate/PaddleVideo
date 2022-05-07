@@ -16,11 +16,7 @@ Linux GPU/CPU  PYTHON 服务化部署测试的主程序为`test_serving_infer_py
 
 ### 2.1 准备数据
 
-用于基础训练推理测试的数据位于`test_images/lite_data.tar`，直接解压即可（如果已经解压完成，则无需运行下面的命令）。
-
-```bash
-tar -xf test_images/lite_data.tar
-```
+用于测试的数据在`./data/example.png`
 
 ### 2.2 准备环境
 
