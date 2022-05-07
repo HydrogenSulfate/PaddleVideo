@@ -138,12 +138,6 @@ class VideoOp(Op):
 class VideoService(WebService):
     def get_pipeline_response(self, read_op):
         """get_pipeline_response
-
-        Args:
-            read_op ([type]): [description]
-
-        Returns:
-            [type]: [description]
         """
         video_op = VideoOp(name="video", input_ops=[read_op])
         return video_op

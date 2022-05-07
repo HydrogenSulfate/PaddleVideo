@@ -23,7 +23,7 @@
 
 | 算法名称 | 模型名称 | 模型类型 | 基础<br>训练预测 | 更多<br>训练方式 | 模型压缩 |  其他预测部署  |
 | :--- | :--- |  :----:  | :--------: |  :----  |   :----  |   :----  |
-| PP-TSM     |pptsm_k400_frames_uniform | 动作识别 | 支持 | 混合精度 | - | Paddle Inference: C++ |
+| PP-TSM     |pptsm_k400_frames_uniform | 动作识别 | 支持 | 混合精度 | - | Paddle Inference: C++<br>Paddle Serving: Python |
 | PP-TSN |pptsn_k400_videos | 动作识别 | 支持 | 混合精度 | - | Paddle Inference: C++ |
 | AGCN |agcn_fsd	 | 动作识别 | 支持 | 混合精度 | - | - |
 | STGCN |stgcn_fsd | 动作识别 | 支持 | 混合精度 | - | - |

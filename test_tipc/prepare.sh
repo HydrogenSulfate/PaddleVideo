@@ -473,7 +473,8 @@ if [ ${MODE} = "serving_infer" ];then
         wget -nc https://videotag.bj.bcebos.com/PaddleVideo-release2.3/ppTSM.zip --no-check-certificate
         unzip ppTSM.zip
         popd
-
+    else
+        echo "Not added into TIPC now."
     fi
 fi
 
