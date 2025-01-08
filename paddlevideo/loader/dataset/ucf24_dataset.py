@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import copy
 import numpy as np
 
@@ -39,6 +40,7 @@ class UCF24Dataset(BaseDataset):
 
     def __init__(self, file_path, pipeline, num_retries=5, **kwargs):
         self.num_retries = num_retries
+        self.image_dir = kwargs.get('image_dir', None)
         super().__init__(file_path, pipeline, **kwargs)
 
     def load_file(self):
@@ -50,7 +52,8 @@ class UCF24Dataset(BaseDataset):
             line = line.strip()  # 'data/ucf24/labels/class_name/video_name/key_frame.txt'
             filename = line.replace('txt', 'jpg').replace(
                 'labels', 'rgb-images')  # key frame path
-
+            if self.image_dir is not None:
+                filename = os.path.join(self.image_dir, filename)
             info.append(dict(filename=filename))
         return info
 
@@ -61,7 +64,7 @@ class UCF24Dataset(BaseDataset):
         im_path = results['filename']
         im_path = im_path.replace('jpg', 'txt')
         im_split = im_path.split('/')
-        frame_index = im_split[3] + '_' + im_split[4] + '_' + im_split[5]
+        frame_index = im_split[-3] + '_' + im_split[-2] + '_' + im_split[-1]
         return results['imgs'], np.array([results['labels']]), frame_index
 
     def prepare_test(self, idx):
@@ -72,5 +75,5 @@ class UCF24Dataset(BaseDataset):
         im_path = results['filename']
         im_path = im_path.replace('jpg', 'txt')
         im_split = im_path.split('/')
-        frame_index = im_split[3] + '_' + im_split[4] + '_' + im_split[5]
+        frame_index = frame_index = im_split[-3] + '_' + im_split[-2] + '_' + im_split[-1]
         return results['imgs'], np.array([results['labels']]), frame_index
